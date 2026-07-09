@@ -64,38 +64,24 @@
 <div class="assistant-overlay" id="assistantOverlay" onclick="closeAssistant(event)">
   <div class="assistant" onclick="event.stopPropagation()">
     <div class="assistant-head">
-      <div class="assistant-title">Stadium Assistant</div>
-      <span class="model-pill" id="modelPill">gemini-2.5-flash</span>
+      <div class="bot-avatar">
+        <div class="bot-face"><span class="bot-eye"></span><span class="bot-eye"></span></div>
+      </div>
       <div style="flex:1"></div>
       <button class="ground-toggle" id="groundToggle" onclick="toggleGrounding(this)" title="Ground answers in live Google Search data">🌐</button>
-      <button class="head-btn" onclick="clearChat()" title="New chat">✎</button>
+      <button class="head-btn" onclick="clearChat()" title="New chat">⟳</button>
       <button class="head-btn" onclick="closeAssistant()" title="Close">✕</button>
     </div>
-    <div class="assistant-log" id="assistantLog">
-      <div class="chat-hero" id="chatHero">
-        <div class="ai-orb" style="width:64px;height:64px"></div>
-        <div class="hero-title">How can I help, Priya?</div>
-        <div class="hero-sub">I see live crowd, incidents, energy &amp; transport data — ask in any language.</div>
-        <div class="hero-chips">
-          <button class="sug-chip" onclick="quickAsk(this)">📊 Crowd status</button>
-          <button class="sug-chip" onclick="quickAsk(this)">🚑 Nearest medical unit to Sec 114</button>
-          <button class="sug-chip" onclick="quickAsk(this)">🌦 Weather risk for egress</button>
-          <button class="sug-chip" onclick="quickAsk(this)">⚠ Draft evacuation plan</button>
-        </div>
-      </div>
-    </div>
+    <div class="assistant-log" id="assistantLog"></div>
     <div class="assistant-input-wrap">
       <form class="composer" onsubmit="askAssistant(event)">
-        <textarea id="assistantField" placeholder="Message Stadium Assistant..." rows="1"
-          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
+        <span class="composer-plus">+</span>
+        <textarea id="assistantField" placeholder="Type your message..." rows="1"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px'"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();askAssistant(event)}"></textarea>
-        <div class="composer-row">
-          <button type="button" class="composer-btn" id="voiceBtn" onclick="startVoice()" title="Voice input">🎙</button>
-          <span class="composer-hint" id="groundHint"></span>
-          <button class="composer-send" type="submit" title="Send">↑</button>
-        </div>
+        <button class="composer-send" type="submit" title="Send">➤</button>
       </form>
-      <div class="composer-note">AI can make mistakes — critical actions always need human sign-off.</div>
+      <button type="button" class="mic-fab" id="voiceBtn" onclick="startVoice()" title="Voice input">🎙</button>
     </div>
   </div>
 </div>

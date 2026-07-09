@@ -828,21 +828,45 @@ function toggleGrounding(btn){
 }
 function clearChat(){
   chatHistory.length=0;
-  $('#assistantLog').innerHTML=document.getElementById('chatHero')?'':'';
+  $('#assistantLog').innerHTML='';
   $('#assistantLog').appendChild(buildHero());
+}
+function heroAsk(prompt){
+  $('#assistantField').value=prompt;
+  askAssistant(new Event('submit'));
 }
 function buildHero(){
   const d=document.createElement('div');
   d.className='chat-hero'; d.id='chatHero';
-  d.innerHTML=`<div class="ai-orb" style="width:64px;height:64px"></div>
-    <div class="hero-title">How can I help, Priya?</div>
-    <div class="hero-sub">I see live crowd, incidents, energy &amp; transport data — ask in any language.</div>
-    <div class="hero-chips">
-      <button class="sug-chip" onclick="quickAsk(this)">📊 Crowd status</button>
-      <button class="sug-chip" onclick="quickAsk(this)">🚑 Nearest medical unit to Sec 114</button>
-      <button class="sug-chip" onclick="quickAsk(this)">🌦 Weather risk for egress</button>
-      <button class="sug-chip" onclick="quickAsk(this)">⚠ Draft evacuation plan</button>
-    </div>`;
+  d.innerHTML=`
+    <div class="hero-title">Ask<br>Anything</div>
+    <div class="hero-cards">
+      <button class="hero-card" onclick="heroAsk('Give me a full stadium status briefing right now')">
+        <div class="hero-card-ic">${ico('spark',18)}</div>
+        <div class="hero-card-row">Stadium<br>Briefing <span>→</span></div>
+      </button>
+      <button class="hero-card" onclick="heroAsk('What are the biggest crowd risks in the next 30 minutes and what should we do?')">
+        <div class="hero-card-ic">${ico('compass',18)}</div>
+        <div class="hero-card-row">Crowd<br>Advisor <span>→</span></div>
+      </button>
+    </div>
+    <div class="hero-recent-head"><b>Recent Activities</b><button onclick="go('aicenter');closeAssistant()">See All</button></div>
+    <button class="recent-row" onclick="heroAsk('Where is the nearest available medical unit to Section 114?')">
+      <span class="recent-ic">${ico('alert',15)}</span>
+      <span class="recent-t"><b>Medical lookup</b><span>Nearest unit to Section 114</span></span><span>›</span>
+    </button>
+    <button class="recent-row" onclick="heroAsk('What is the weather risk for egress tonight?')">
+      <span class="recent-ic">${ico('globe',15)}</span>
+      <span class="recent-t"><b>Weather risk</b><span>Egress conditions tonight</span></span><span>›</span>
+    </button>
+    <button class="recent-row" onclick="heroAsk('Draft an evacuation plan for Section 105')">
+      <span class="recent-ic">${ico('door',15)}</span>
+      <span class="recent-t"><b>Evacuation draft</b><span>Section 105 · needs human sign-off</span></span><span>›</span>
+    </button>
+    <button class="recent-row" onclick="heroAsk('Which gates should we open or close in the next 30 minutes?')">
+      <span class="recent-ic">${ico('ticket',15)}</span>
+      <span class="recent-t"><b>Gate advisor</b><span>Open / close / re-staff</span></span><span>›</span>
+    </button>`;
   return d;
 }
 /* tiny markdown → safe HTML: bold, italics, bullets, line breaks */
@@ -1143,4 +1167,5 @@ setInterval(()=>{
 
 /* boot */
 go('dashboard');
+$('#assistantLog').appendChild(buildHero());
 $('#clock').textContent=now();
