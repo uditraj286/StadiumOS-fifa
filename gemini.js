@@ -67,7 +67,9 @@ const AI = {
         (used !== this.cfg.model ? `failover → ${used}` : '') + (grounded ? ' grounded: google_search' : ''));
       return text;
     } catch (e) {
-      this.log(feature, Math.round(performance.now() - t0), 0, true, e.message);
+      const note = /Failed to fetch|NetworkError/i.test(e.message) ? 'server offline — run: node server.js' : e.message;
+      if (note.startsWith('server offline')) checkServer();
+      this.log(feature, Math.round(performance.now() - t0), 0, true, note);
       throw e;
     } finally { this.inflight--; }
   },
@@ -114,11 +116,32 @@ const AI = {
       this.log(feature, Math.round(performance.now() - t0), tokens, false);
       return full;
     } catch (e) {
-      this.log(feature, Math.round(performance.now() - t0), tokens, true, e.message);
+      const note = /Failed to fetch|NetworkError/i.test(e.message) ? 'server offline — run: node server.js' : e.message;
+      if (note.startsWith('server offline')) checkServer();
+      this.log(feature, Math.round(performance.now() - t0), tokens, true, note);
       throw e;
     } finally { this.inflight--; }
   },
 };
+
+/* Boot-time backend health check — if the Node server isn't running, say so
+   plainly instead of letting every call die with "Failed to fetch". */
+AI.serverUp = null;
+async function checkServer(){
+  try{
+    const r = await fetch('/api/health', { cache: 'no-store' });
+    const j = await r.json();
+    AI.serverUp = !!j.ok;
+    if (!j.key) console.warn('Server running but no GEMINI_API_KEY in .env');
+  }catch(_){
+    AI.serverUp = false;
+    if (typeof toast === 'function')
+      toast('⚠ AI backend offline', 'Start it with:  node server.js  — then refresh. Stubs cover everything meanwhile.', 'warn');
+  }
+  return AI.serverUp;
+}
+setTimeout(checkServer, 600);
+setInterval(checkServer, 30_000);
 
 /* Live operational context serialized for every AI call — the "one data model" promise. */
 function stadiumContext() {

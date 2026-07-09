@@ -911,9 +911,13 @@ async function askAssistant(e){
     const mp=document.getElementById('modelPill'); if(mp) mp.textContent=AI.activeModel;
     chatHistory.push(['user',q],['assistant',full]);
   }catch(err){
-    // §14 deterministic fallback — the assistant never dies on stage
-    const hit=ANSWERS.find(([re])=>re.test(q));
-    el.innerHTML=md(hit?hit[1]:'Live model unreachable — deterministic fallback active. I can still answer about crowd status, medical units, energy, evacuation plans, and transport.');
+    // deterministic fallback — the assistant never dies on stage
+    if(AI.serverUp===false){
+      el.innerHTML=md('**The AI backend is offline.** Open a terminal in the project folder and run `node server.js`, then refresh this page. Meanwhile I can still give you cached answers about crowd status, medical units, energy, evacuation plans, and transport.');
+    }else{
+      const hit=ANSWERS.find(([re])=>re.test(q));
+      el.innerHTML=md(hit?hit[1]:'Live model unreachable — deterministic fallback active. I can still answer about crowd status, medical units, energy, evacuation plans, and transport.');
+    }
     el.insertAdjacentHTML('beforeend','<div class="msg-meta">⚠ fallback (stub)</div>');
   }
   log.scrollTop=log.scrollHeight;

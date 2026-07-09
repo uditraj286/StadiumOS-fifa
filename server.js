@@ -30,6 +30,11 @@ function limited(ip) {
 }
 
 http.createServer((req, res) => {
+  /* ── health check ── */
+  if (req.url === '/api/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, key: !!KEY }));
+  }
   /* ── AI proxy ── */
   if (req.method === 'POST' && req.url.startsWith('/api/gemini')) {
     if (limited(req.socket.remoteAddress)) { res.writeHead(429, {'Content-Type':'application/json'}); return res.end('{"error":"rate limited"}'); }
