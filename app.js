@@ -358,42 +358,92 @@ volunteers: () => `
 </div>`,
 
 fan: () => `
-<div class="view-head"><div class="view-title">Fan App — Live Preview</div>
-<div class="view-sub">"Mateo, 34, traveling supporter" — completes his whole journey with zero staff interaction</div></div>
-<div style="display:grid;grid-template-columns:360px 1fr;gap:26px;align-items:start">
-  <div class="phone"><div class="phone-screen">
-    <div class="phone-body" id="phoneBody">${fanScreens.home()}</div>
-    <div class="tab-bar" id="fanTabs">
-      <button class="on" data-tab="home" onclick="fanTab('home',this)"><b>⌂</b>Home</button>
-      <button data-tab="navigate" onclick="fanTab('navigate',this)"><b>🧭</b>Navigate</button>
-      <button data-tab="order" onclick="fanTab('order',this)"><b>🍔</b>Order</button>
-      <button data-tab="assist" onclick="fanTab('assist',this)"><b>✦</b>Assist</button>
-      <button data-tab="wallet" onclick="fanTab('wallet',this)"><b>▨</b>Wallet</button>
+<div class="view-head" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px">
+  <div><div class="view-title">Fan Portal</div>
+  <div class="view-sub">What 82,000 fans see at stadiumos.app — Mateo's live session</div></div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <span class="fan-select-wrap">${ico('globe',14)}<select class="fan-select" onchange="FAN.lang=this.value;toast('Language set','Everything now renders in '+LANGS[this.value])">
+      ${Object.entries(LANGS).map(([k,v])=>`<option value="${k}" ${FAN.lang===k?'selected':''}>${v}</option>`).join('')}
+    </select></span>
+    <button class="pill ${FAN.wheelchair?'pill-ok':'pill-dim'}" style="cursor:pointer" onclick="FAN.wheelchair=!FAN.wheelchair;go('fan');toast(FAN.wheelchair?'Wheelchair mode ON':'Wheelchair mode off',FAN.wheelchair?'All routes step-free — elevators & ramps only':'Standard routing restored')">${ico('access',14)}&nbsp;${FAN.wheelchair?'Accessible: ON':'Accessible mode'}</button>
+    <button class="btn btn-red" onclick="fanSOS()">${ico('alert',14)}&nbsp;SOS</button>
+  </div>
+</div>
+
+<div class="card fan-hero">
+  <div>
+    <div class="fan-hero-label">FIFA World Cup 2026™ · Group A · MetLife Stadium</div>
+    <div class="fan-score">MEX <span>1 – 0</span> RSA</div>
+    <div class="fan-hero-meta"><span class="pill pill-live" style="padding:5px 12px"><span class="dot dot-red pulse"></span>Live · 63' second half</span></div>
+  </div>
+  <div class="fan-hero-right">
+    <div class="fan-chip">${ico('seat',15)}<div><b>Sec 233 · Row 12 · Seat 8</b><span>Upper tier, east</span></div></div>
+    <div class="fan-chip">${ico('ticket',15)}<div><b>Ticket validated 19:02</b><span>Entered via Gate C</span></div></div>
+    ${FAN.order?`<div class="fan-chip" style="border-color:rgba(198,241,53,.4)">${ico('utensils',15)}<div><b>Order on the way — 4 min</b><span>${FAN.order}</span></div></div>`:''}
+  </div>
+</div>
+
+<div class="grid-3" style="margin-top:18px;align-items:stretch">
+  <div class="card">
+    <div class="fan-card-head">${ico('compass',17)} Navigate ${FAN.wheelchair?`<span class="pill pill-ok" style="padding:3px 10px;font-size:9.5px;margin-left:auto">${ico('access',11)} step-free</span>`:''}</div>
+    <div class="act-sub" style="margin-bottom:12px">${FAN.wheelchair?'Elevators &amp; ramps only · staff alerted if an elevator is down':'Crowd-aware routes — avoiding the busy Section 105 concourse'}</div>
+    <div class="fan-dests">
+      <button class="fan-dest" onclick="fanRoute('my seat, Section 233 Row 12',this)">${ico('seat',15)} My seat</button>
+      <button class="fan-dest" onclick="fanRoute('nearest accessible restroom',this)">${ico('access',15)} Restroom</button>
+      <button class="fan-dest" onclick="fanRoute('nearest food stand with a short queue',this)">${ico('utensils',15)} Food</button>
+      <button class="fan-dest" onclick="fanRoute('fastest exit to the rail station',this)">${ico('door',15)} Exit</button>
     </div>
-  </div></div>
-  <div style="display:flex;flex-direction:column;gap:18px">
-    <div class="card"><div class="section-title" style="margin-bottom:10px">Why this wins the fan journey</div>
-      ${row2('Wayfinding time','−40% vs unassisted (launch goal #1)')}
-      ${row2('Languages','Full parity — ES/EN/FR + host languages')}
-      ${row2('Accessibility','Voice-first mode, WCAG 2.2 AA, live captions')}
-      ${row2('SOS','One tap → geo-located → Emergency Command Center')}
-      ${row2('Offline','Ticket + map cached; realtime re-syncs automatically')}
+    <div id="fanRouteOut" style="margin-top:14px;min-height:120px">
+      <div class="act-sub" style="line-height:1.6">Pick a destination — routes update with live crowd data.</div>
     </div>
-    <div class="card"><div class="section-title" style="margin-bottom:10px">✦ Live Translation — Gemini</div>
-      <div class="act-sub" style="margin-bottom:10px">Staff announcement → every fan's language, instantly.</div>
-      <input id="xlateIn" placeholder="e.g. Gate C is congested, please use Gate B" style="width:100%;background:var(--bg-canvas);border:1px solid var(--border-hairline);border-radius:var(--r-input);padding:11px 14px;font-size:13px;margin-bottom:10px">
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-lime" onclick="translateFan(this)">Translate</button>
-        <span class="act-sub">→ ES · FR · AR · PT</span>
-      </div>
-      <div id="xlateOut" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <div class="fan-card-head">${ico('utensils',17)} Order to seat <span class="pill pill-ok" style="padding:3px 10px;font-size:9.5px;margin-left:auto">4 min delivery</span></div>
+    ${MENU.map(([icn,name,price],i)=>`<div class="menu-row">
+      <span class="menu-ic">${ico(icn,16)}</span>
+      <div style="flex:1"><div class="menu-name">${name}</div><div class="act-sub">${price}</div></div>
+      <button class="qty-btn" onclick="fanCart(${i},-1)">${ico('minus',13)}</button>
+      <span class="mono" id="qty-${i}" style="min-width:18px;text-align:center;font-size:12.5px">${FAN.cart[i]||0}</span>
+      <button class="qty-btn qty-add" onclick="fanCart(${i},1)">${ico('plus',13)}</button>
+    </div>`).join('')}
+    <button class="btn btn-lime" style="width:100%;margin-top:14px;padding:11px" onclick="fanCheckout()">Checkout · <span id="cartTotal">$0</span></button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:8px;padding:9px;font-size:11.5px" onclick="fanCombo(this)">${ico('spark',13)} AI combo for the second half</button>
+    <div id="comboOut"></div><div id="fanOrderStatus"></div>
+  </div>
+
+  <div class="card" style="display:flex;flex-direction:column">
+    <div class="fan-card-head">${ico('spark',17)} Assistant <span class="act-sub" style="margin-left:auto;font-size:10px">${LANGS[FAN.lang]} · any language works</span></div>
+    <div id="fanChat" class="fan-chat">
+      ${FAN.chat.length?FAN.chat.map(([r,t])=>`<div class="msg ${r==='u'?'msg-user':'msg-ai'}" style="font-size:12.5px;${r==='u'?'align-self:flex-end':''}">${t}</div>`).join(''):
+      `<div class="msg msg-ai" style="font-size:12.5px">Hi Mateo! Ask me about restrooms, food, your seat or the fastest way out — in any language.</div>`}
     </div>
-    <div class="card"><div class="section-title" style="margin-bottom:10px">Live fan telemetry</div>
-      ${pRow('App sessions in stadium','76%','var(--accent-lime)')}
-      ${pRow('AI assistant usage','58%','var(--accent-teal)')}
-      ${pRow('Seat-delivery orders','41%','var(--accent-teal)')}
-      ${pRow('AR navigation adoption','33%','var(--accent-amber)')}
-    </div>
+    <form style="display:flex;gap:8px;margin-top:12px" onsubmit="fanAsk(event)">
+      <input id="fanField" placeholder="Ask anything..." style="flex:1;background:var(--bg-canvas);border:1px solid var(--border-hairline);border-radius:999px;padding:10px 16px;font-size:12.5px">
+      <button class="btn btn-lime" style="width:40px;height:40px;border-radius:50%;padding:0" title="Send">${ico('send',15)}</button>
+    </form>
+  </div>
+</div>
+
+<div class="grid-3" style="margin-top:18px">
+  <div class="card">
+    <div class="fan-card-head">${ico('mega',17)} Live announcements
+      <button class="btn btn-ghost" style="margin-left:auto;padding:5px 13px;font-size:10.5px" onclick="fanAnnounce(this)">${ico('globe',12)} Translate</button></div>
+    <div class="act-sub" id="fanAnnOut" style="line-height:1.65">Stadium PA runs in Spanish — tap Translate to read every announcement in ${LANGS[FAN.lang]}.</div>
+  </div>
+  <div class="card">
+    <div class="fan-card-head">${ico('train',17)} Smart exit</div>
+    <div class="act-sub" style="margin-bottom:10px">Personal plan: when to leave, which gate, live transit.</div>
+    <select id="fanExitMode" class="fan-select" style="width:100%;margin-bottom:10px">
+      <option>Rail — Meadowlands line</option><option>Rideshare pickup</option><option>Parking Lot F</option><option>Accessible shuttle</option>
+    </select>
+    <button class="btn btn-lime" style="width:100%;padding:10px" onclick="genFanExit(this)">${ico('spark',13)} Plan my exit</button>
+    <div id="fanExitOut"></div>
+  </div>
+  <div class="card">
+    <div class="fan-card-head">${ico('wallet',17)} Wallet</div>
+    ${row2('Match ticket','Sec 233 · validated')}${row2('Visa ····4got','default payment')}${row2('Stadium credit','$18.50')}${row2("Today's spend",'$31.00')}
+    <div class="act-sub" style="margin-top:10px;display:flex;align-items:center;gap:6px">${ico('ticket',13)} Offline-cached — works with zero signal in the bowl</div>
   </div>
 </div>`,
 };
@@ -412,7 +462,7 @@ async function genRoles(btn){
     const raw=await AI.call('volunteer_ops',
       `Volunteers on shift: ${VOLS.map(v=>`${v.name} (${v.skills})`).join('; ')}. Current situation needs attention: Section 105 crowding, wheelchair escort backlog at Gate C, 75-min cooling break in ~12 min (cleanup+restock), rain expected at egress. Reassign each volunteer to the OPTIMAL role right now. Output ONLY a JSON array: [{"name":"...","role":"short role — location","why":"under 10 words"}] for all ${VOLS.length}.`,
       { system: stadiumContext(), temperature: 0.6 });
-    const roles=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const roles=extractJSON(raw);
     roles.forEach(r=>{
       const i=VOLS.findIndex(v=>r.name.includes(v.name.split(' ')[0]));
       if(i<0) return;
@@ -431,7 +481,7 @@ async function breakProtocol(btn){
     const raw=await AI.call('volunteer_ops',
       `The 75th-minute cooling break starts NOW. Generate the break protocol as ONLY a JSON array of 4 notifications: [{"to":"volunteer name or team","zone":"...","task":"specific cleanup/restock/reposition task","mins":estimated minutes}]. Base it on: Concourse B trash accumulation, kiosk B4 water low, Section 105 concourse crowding expected, restrooms near Sec 220s need check.`,
       { system: stadiumContext(), temperature: 0.6 });
-    const tasks=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const tasks=extractJSON(raw);
     document.getElementById('breakOut').innerHTML=`<div style="margin-top:12px">${tasks.map(t=>
       `<div class="qrow"><div class="qthumb" style="background:rgba(198,241,53,.1)">📲</div>
       <div class="qbody"><div class="qtitle" style="font-size:12.5px">${t.to} → ${t.zone}</div>
@@ -460,114 +510,34 @@ async function genVolInstructions(title,btn){
 const FAN={ cart:{}, chat:[], order:null, lang:'en', wheelchair:false };
 const LANGS={en:'English',es:'Español',fr:'Français',ar:'العربية',pt:'Português',zh:'中文'};
 const MENU=[
-  ['🌮','Tacos al pastor','$9'],['🍔','Stadium burger','$12'],['🍕','Pizza slice','$7'],
-  ['💧','Agua mineral','$4'],['🍺','Cerveza','$10'],['🍿','Palomitas','$6'],
+  ['utensils','Tacos al pastor','$9'],['utensils','Stadium burger','$12'],['pizza','Pizza slice','$7'],
+  ['drop','Agua mineral','$4'],['cup','Cerveza','$10'],['cup','Palomitas','$6'],
 ];
-const fanScreens={
-home:()=>`
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-    <div><div style="font-weight:700">Hola, Mateo 👋</div><div class="act-sub">MetLife Stadium · Sec 233 Row 12</div></div>
-    <select onchange="FAN.lang=this.value;toast('Language set','Everything now translates to '+LANGS[this.value])" style="background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-hairline);border-radius:999px;padding:6px 10px;font-size:10.5px">
-      ${Object.entries(LANGS).map(([k,v])=>`<option value="${k}" ${FAN.lang===k?'selected':''}>${v}</option>`).join('')}
-    </select>
-  </div>
-  <div class="card" style="padding:14px;margin-bottom:12px;border-color:rgba(45,217,196,.25)">
-    <div style="display:flex;justify-content:space-between;align-items:center"><div class="qtitle" style="font-size:12px">📢 Live announcements</div>
-    <button class="btn btn-ghost" style="padding:4px 10px;font-size:10px" onclick="fanAnnounce(this)">Translate</button></div>
-    <div class="act-sub" id="fanAnnOut" style="margin-top:6px;line-height:1.5">Stadium PA runs in Spanish — tap Translate to hear every announcement in your language.</div>
-  </div>
-  <div class="ticket">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div><div class="act-sub">FIFA World Cup 2026™ · Group A</div>
-      <div style="font-family:var(--font-num);font-weight:600;font-size:17px;margin-top:4px">🇲🇽 MEX &nbsp;1 – 0&nbsp; RSA 🇿🇦</div>
-      <div class="act-sub" style="margin-top:4px">63' · Second half</div></div>
-      <div style="font-size:34px">▨</div>
-    </div>
-  </div>
-  ${FAN.order?`<div class="card" style="padding:14px;margin-top:12px">
-    <div style="display:flex;justify-content:space-between"><div class="qtitle" style="font-size:12.5px">🍔 Tu pedido</div><span class="pill pill-ok" style="padding:3px 9px;font-size:9.5px">EN CAMINO</span></div>
-    <div class="act-sub" style="margin-top:6px">${FAN.order} · entrega al asiento · 4 min</div></div>`:''}
-  <div class="card" style="padding:14px;margin-top:12px;border-color:rgba(198,241,53,.25)">
-    <div class="qtitle" style="font-size:12.5px">✦ Asistente</div>
-    <div class="act-sub" style="margin-top:6px;line-height:1.55">Pregúntame lo que sea — baños, comida, salidas, en tu idioma.</div>
-    <button class="btn btn-lime" style="padding:6px 12px;font-size:11px;margin-top:10px" onclick="fanTab('assist')">✦ Abrir chat</button>
-  </div>
-  <div class="card" style="padding:14px;margin-top:12px">
-    <div class="qtitle" style="font-size:12.5px">🚇 Salida inteligente</div>
-    <div class="act-sub" style="margin-top:6px;line-height:1.5">Lluvia probable. Sal al 88' por Gate C → tren de las 22:12. Ahorras ~25 min de fila.</div>
-  </div>
-  <button class="btn btn-red" style="width:100%;margin-top:12px;padding:12px" onclick="fanSOS()">🆘 Emergencia — SOS</button>`,
-
-navigate:()=>`
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-    <div style="font-weight:700">🧭 Navigate</div>
-    <button class="pill ${FAN.wheelchair?'pill-ok':'pill-dim'}" style="font-size:10px;padding:5px 11px" onclick="FAN.wheelchair=!FAN.wheelchair;fanTab('navigate');toast(FAN.wheelchair?'♿ Wheelchair mode ON':'Wheelchair mode off',FAN.wheelchair?'Routes use elevators & ramps only — no stairs, wider paths':'Standard routing restored')">♿ ${FAN.wheelchair?'ON':'OFF'}</button>
-  </div>
-  <div class="act-sub" style="margin-bottom:12px">${FAN.wheelchair?'Step-free routes only · elevators &amp; ramps · staff alerted if an elevator is down':'Crowd-aware routes, updated live'}</div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-    <button class="sug-chip" onclick="fanRoute('my seat, Section 233 Row 12',this)">💺 My seat</button>
-    <button class="sug-chip" onclick="fanRoute('nearest accessible restroom',this)">♿ Restroom</button>
-    <button class="sug-chip" onclick="fanRoute('nearest food stand with a short queue',this)">🍔 Food</button>
-    <button class="sug-chip" onclick="fanRoute('fastest exit to the rail station',this)">🚪 Exit</button>
-  </div>
-  <div class="card" style="padding:16px;min-height:160px" id="fanRouteOut">
-    <div class="act-sub" style="line-height:1.6">Pick a destination — the AI routes you around crowded concourses (Section 105 area is busy right now).</div>
-  </div>
-  <div class="card" style="padding:14px;margin-top:12px;background:rgba(45,217,196,.06)">
-    <div class="qtitle" style="font-size:12px">📡 AR mode</div>
-    <div class="act-sub" style="margin-top:4px">Point your camera — arrows overlay on the concourse. (Kiosk demo)</div>
-  </div>`,
-
-order:()=>`
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div style="font-weight:700">🍔 Order to seat</div>
-    <span class="pill pill-ok" style="padding:4px 10px;font-size:9.5px">Sec 233 · 4 min delivery</span>
-  </div>
-  ${MENU.map(([ic,name,price],i)=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border-hairline)">
-    <span style="font-size:20px">${ic}</span>
-    <div style="flex:1"><div style="font-size:12.5px;font-weight:600">${name}</div><div class="act-sub">${price}</div></div>
-    <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="fanCart(${i},-1)">−</button>
-    <span class="mono" id="qty-${i}" style="min-width:16px;text-align:center;font-size:12px">${FAN.cart[i]||0}</span>
-    <button class="btn btn-lime" style="padding:4px 10px;font-size:12px" onclick="fanCart(${i},1)">+</button>
-  </div>`).join('')}
-  <button class="btn btn-lime" style="width:100%;margin-top:14px;padding:12px" onclick="fanCheckout()" id="fanCheckoutBtn">Checkout · <span id="cartTotal">$0</span></button>
-  <button class="btn btn-ghost" style="width:100%;margin-top:8px;padding:10px;font-size:11.5px" onclick="fanCombo(this)">✦ AI: suggest a combo for the second half</button>
-  <div id="comboOut"></div>`,
-
-assist:()=>`
-  <div style="font-weight:700;margin-bottom:10px">✦ Asistente</div>
-  <div id="fanChat" style="display:flex;flex-direction:column;gap:10px;min-height:280px">
-    ${FAN.chat.length?FAN.chat.map(([r,t])=>`<div class="msg ${r==='u'?'msg-user':'msg-ai'}" style="font-size:12px;${r==='u'?'align-self:flex-end':''}">${t}</div>`).join(''):
-    '<div class="msg msg-ai" style="font-size:12px">¡Hola Mateo! Soy tu asistente del estadio. Pregúntame por baños, comida, tu asiento o la salida — en cualquier idioma. 🌎</div>'}
-  </div>
-  <form style="display:flex;gap:8px;margin-top:12px" onsubmit="fanAsk(event)">
-    <input id="fanField" placeholder="Escribe aquí..." style="flex:1;background:var(--bg-card);border:1px solid var(--border-hairline);border-radius:999px;padding:10px 14px;font-size:12px">
-    <button class="btn btn-lime" style="width:38px;height:38px;border-radius:50%;padding:0">➤</button>
-  </form>`,
-
-wallet:()=>`
-  <div style="font-weight:700;margin-bottom:12px">▨ Wallet</div>
-  <div class="ticket" style="text-align:center;padding:22px">
-    <div class="act-sub">MATCH TICKET · GROUP A</div>
-    <div style="font-family:var(--font-num);font-weight:700;font-size:15px;margin:6px 0">MEX vs RSA</div>
-    <div style="font-size:52px;letter-spacing:4px;margin:8px 0">▨▦▨▥</div>
-    <div class="act-sub">Sec 233 · Row 12 · Seat 8 · Gate C</div>
-    <div class="pill pill-ok" style="margin-top:10px;display:inline-flex;padding:5px 14px;font-size:10px">✓ Validated 19:02</div>
-  </div>
-  <div class="card" style="padding:14px;margin-top:12px">
-    <div class="qtitle" style="font-size:12px;margin-bottom:8px">Payments</div>
-    ${row2('💳 Visa ····4got','default')}${row2('Stadium credit','$18.50')}${row2("Today's spend",'$31.00')}
-  </div>
-  <div class="card" style="padding:14px;margin-top:12px">
-    <div class="qtitle" style="font-size:12px;margin-bottom:8px">History</div>
-    ${row2('2× Tacos, 1× Agua','$22.00')}${row2('Bufanda MEX (merch)','$9.00')}
-  </div>`,
+/* inline SVG icon set (lucide-style, stroke = currentColor) */
+const ICONS={
+  compass:'<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
+  utensils:'<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"/><path d="M21 15v7"/>',
+  chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  mega:'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+  access:'<circle cx="12" cy="5" r="2"/><path d="M12 7v5l4 3"/><path d="M17.5 17a5.5 5.5 0 1 1-7.5-6.9"/>',
+  train:'<rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+  alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
+  send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+  spark:'<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>',
+  pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  ticket:'<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>',
+  door:'<path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"/><path d="M2 20h20"/><path d="M14 12v.01"/>',
+  seat:'<path d="M5 12V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6"/><path d="M3 18v-2a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2"/><path d="M4 22v-2"/><path d="M20 22v-2"/>',
+  drop:'<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+  cup:'<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>',
+  pizza:'<path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/>',
+  minus:'<path d="M5 12h14"/>',
+  plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
 };
-function fanTab(name,btn){
-  const body=$('#phoneBody'); if(!body) return;   // fan view not mounted
-  body.innerHTML=fanScreens[name]();
-  document.querySelectorAll('#fanTabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
-}
+function ico(n,s=18){return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px">${ICONS[n]||''}</svg>`;}
+
 function fanCart(i,d){
   FAN.cart[i]=Math.max(0,(FAN.cart[i]||0)+d);
   const q=document.getElementById(`qty-${i}`); if(q)q.textContent=FAN.cart[i];
@@ -579,9 +549,12 @@ function fanCheckout(){
   if(!items.length) return toast('Cart is empty','Add something first','warn');
   FAN.order=items.map(([k,v])=>`${v}× ${MENU[k][1]}`).join(', ');
   FAN.cart={};
-  toast('Order placed 🍔',`${FAN.order} → seat delivery, Sec 233 · 4 min`);
-  pushActivity('🍔','chip-teal','Seat-delivery order','Sec 233 · fan app checkout');
-  fanTab('home');
+  toast('Order placed',`${FAN.order} → seat delivery, Sec 233 · 4 min`);
+  pushActivity('🍔','chip-teal','Seat-delivery order','Sec 233 · fan portal checkout');
+  document.querySelectorAll('[id^="qty-"]').forEach(q=>q.textContent='0');
+  const t=document.getElementById('cartTotal'); if(t)t.textContent='$0';
+  const st=document.getElementById('fanOrderStatus');
+  if(st) st.innerHTML=`<div class="act-sub" style="margin-top:12px;padding:12px;background:rgba(198,241,53,.06);border:1px solid rgba(198,241,53,.3);border-radius:12px;line-height:1.5"><b style="color:var(--accent-lime)">${ico('utensils',13)} On the way — 4 min</b><br>${FAN.order} · delivered to Sec 233 Row 12</div>`;
 }
 async function fanCombo(btn){
   busy(btn,true);
@@ -600,9 +573,20 @@ async function fanRoute(dest,btn){
     const txt=await AI.call(FAN.wheelchair?'accessibility':'fan_assist',
       `Fan at Section 233 Row 12, MetLife Stadium, wants to reach: ${dest}. Give walking directions in 2-3 numbered steps with estimated time, avoiding the crowded Section 105 concourse.${FAN.wheelchair?' The fan uses a WHEELCHAIR: route MUST be fully step-free — elevators and ramps only, mention the elevator location, add 30% to time estimates, and note the accessible viewing platform if relevant.':''} Answer in ${LANGS[FAN.lang]}, friendly, short.`,
       { system: stadiumContext(), temperature:0.5 });
-    out.innerHTML=`<div class="qtitle" style="font-size:12px;margin-bottom:6px">🧭 Ruta</div><div class="act-sub" style="line-height:1.65">${md(txt)}</div>
+    out.innerHTML=`<div class="qtitle" style="font-size:12px;margin-bottom:6px">${ico('compass',14)} Route</div><div class="act-sub" style="line-height:1.65">${md(txt)}</div>
     <div class="pbar" style="margin-top:12px"><i style="width:12%;background:var(--accent-lime);animation:routeGo 8s linear forwards"></i></div>`;
-  }catch(e){ out.innerHTML='<div class="act-sub">Ruta no disponible — usa la señalización del estadio.</div>'; }
+  }catch(e){ out.innerHTML='<div class="act-sub">Route unavailable right now — follow the concourse signage or ask any volunteer in a green vest.</div>'; }
+}
+async function genFanExit(btn){
+  busy(btn,true);
+  try{
+    const mode=document.getElementById('fanExitMode').value;
+    const txt=await AI.call('exit_planner',
+      `Fan at Sec 233 Row 12 leaving via: ${mode}. Rain likely post-match, rail surge peaks 22:30-23:00, Gate C turnstile fault, Lot F 98% full. Personal exit plan: which match minute to leave, which gate, route, total time vs full-time whistle exit.${FAN.wheelchair||mode.includes('Accessible')?' Fan uses a wheelchair: step-free route, accessible shuttle bay, staff assist point.':''} 3 short numbered steps in ${LANGS[FAN.lang]}.`,
+      { system: stadiumContext(), temperature: 0.5 });
+    document.getElementById('fanExitOut').innerHTML=`<div class="act-sub" style="margin-top:12px;line-height:1.65">${md(txt)}</div>`;
+  }catch(e){ toast('Fallback active','Exit planner busy — try again shortly','warn'); }
+  busy(btn,false);
 }
 async function fanAsk(e){
   e.preventDefault();
@@ -935,7 +919,14 @@ function startVoice(){
   rec.start();
 }
 
-/* ───── GenAI tools (live Gemini, §14-activated) ───── */
+/* ───── GenAI tools (live Gemini) ───── */
+/* Models wrap JSON in prose or fences more often than not — pull out the
+   first JSON array/object instead of trusting the raw string. */
+function extractJSON(raw){
+  const m=raw.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
+  if(!m) throw new Error('no JSON in response');
+  return JSON.parse(m[0]);
+}
 function busy(btn,on,label){ if(!btn)return; if(on){btn.dataset.l=btn.textContent;btn.textContent='✦ Generating…';btn.disabled=true;btn.style.opacity=.6}else{btn.textContent=label||btn.dataset.l;btn.disabled=false;btn.style.opacity=1} }
 
 async function genInsights(btn){
@@ -944,7 +935,7 @@ async function genInsights(btn){
     const raw=await AI.call('crowd_prediction',
       `Generate exactly 3 short operational insights as a JSON array: [{"icon":"emoji","title":"...","body":"one or two sentences, specific numbers"}]. Topics: crowd prediction, food/inventory or transport, and REAL current weather at East Rutherford NJ (use Google Search) and its operational impact. Output ONLY the JSON array, no markdown.`,
       { system: stadiumContext(), temperature: 0.8, grounded: true });
-    const cards=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const cards=extractJSON(raw);
     $('#insightCards').innerHTML=cards.map(c=>`<div class="card"><div class="qtitle">${c.icon} ${c.title}</div><div class="act-sub" style="margin-top:8px;line-height:1.6">${c.body}</div></div>`).join('');
     toast('AI Insights refreshed','Generated live by gemini-2.5-flash from current stadium state');
   }catch(e){ toast('Fallback active','Live model unavailable — showing cached insights','warn'); }
@@ -997,7 +988,7 @@ async function translateFan(btn){
     const raw=await AI.call('translation',
       `Translate this stadium announcement into Spanish, French, Arabic and Portuguese. Output ONLY a JSON object: {"es":"...","fr":"...","ar":"...","pt":"..."}. Announcement: "${src}"`,
       { temperature: 0.2 });
-    const t=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const t=extractJSON(raw);
     $('#xlateOut').innerHTML=[['🇪🇸 ES',t.es],['🇫🇷 FR',t.fr],['🇸🇦 AR',t.ar],['🇵🇹 PT',t.pt]]
       .map(([l,v])=>`<div style="padding:8px 0;border-bottom:1px solid var(--border-hairline)"><span class="act-sub" style="margin-right:8px">${l}</span><span style="font-size:12.5px">${v}</span></div>`).join('');
   }catch(e){ toast('Fallback active','Translation unavailable — model unreachable','warn'); }
@@ -1068,7 +1059,7 @@ async function genSustain(btn){
     const raw=await AI.call('energy_opt',
       `Generate 2 new energy/water/waste optimization actions as a JSON array: [{"icon":"emoji","title":"short action","impact":"quantified saving"}]. Be specific to current state. Output ONLY the JSON array.`,
       { system: stadiumContext(), temperature: 0.8 });
-    const items=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const items=extractJSON(raw);
     $('#sustainQueue').innerHTML=items.map(i=>qrow(i.icon,'rgba(198,241,53,.1)',i.title,i.impact,'pill-teal','AI · New','')).join('');
     toast('Optimizations generated','2 new actions from live telemetry — gemini-2.5-flash');
   }catch(e){ toast('Fallback active','Optimization generation unavailable','warn'); }

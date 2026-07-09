@@ -37,15 +37,18 @@ const AI = {
     this.inflight++;
     const t0 = performance.now();
     try {
-      const body = JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        systemInstruction: system ? { parts: [{ text: system }] } : undefined,
-        generationConfig: { temperature, maxOutputTokens: 1024 },
-        tools: grounded ? [{ google_search: {} }] : undefined,
-      });
       let res, used;
       for (const model of this.candidates()) {
         used = model;
+        const body = JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          systemInstruction: system ? { parts: [{ text: system }] } : undefined,
+          // 2.5 models "think" by default and can burn the whole output budget
+          // mid-thought on structured tasks — disable thinking, raise the cap
+          generationConfig: { temperature, maxOutputTokens: 2048,
+            ...(model.startsWith('gemini-2.5') ? { thinkingConfig: { thinkingBudget: 0 } } : {}) },
+          tools: grounded ? [{ google_search: {} }] : undefined,
+        });
         for (let attempt = 0; attempt < 2; attempt++) {
           res = await fetch(`/api/gemini?model=${model}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body,
@@ -80,13 +83,14 @@ const AI = {
     this.inflight++;
     const t0 = performance.now(); let tokens = 0;
     try {
-      const body = JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        systemInstruction: system ? { parts: [{ text: system }] } : undefined,
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
-      });
       let res;
       for (const model of this.candidates()) {
+        const body = JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          systemInstruction: system ? { parts: [{ text: system }] } : undefined,
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2048,
+            ...(model.startsWith('gemini-2.5') ? { thinkingConfig: { thinkingBudget: 0 } } : {}) },
+        });
         res = await fetch(`/api/gemini?model=${model}&stream=1`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body,
         });

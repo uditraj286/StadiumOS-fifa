@@ -257,6 +257,38 @@ svg text{font-family:var(--font-ui)}
 
 @keyframes routeGo{from{width:5%}to{width:100%}}
 
+/* ─── Fan Portal (website) ─── */
+.fan-hero{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;background:linear-gradient(120deg,rgba(198,241,53,.09),rgba(45,217,196,.07) 60%,transparent),var(--bg-card);border-color:rgba(198,241,53,.18)}
+.fan-hero-label{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-secondary);font-weight:600}
+.fan-score{font-family:var(--font-num);font-size:42px;font-weight:700;letter-spacing:-.01em;margin:10px 0}
+.fan-score span{color:var(--accent-lime);padding:0 6px}
+.fan-hero-meta{display:flex;gap:10px}
+.fan-hero-right{display:flex;flex-direction:column;gap:10px;min-width:250px}
+.fan-chip{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border:1px solid var(--border-hairline);border-radius:14px;padding:10px 14px;color:var(--accent-lime)}
+.fan-chip div{display:flex;flex-direction:column;gap:1px}
+.fan-chip b{font-size:12px;color:var(--text-primary);font-weight:600}
+.fan-chip span{font-size:10.5px;color:var(--text-secondary)}
+.fan-card-head{display:flex;align-items:center;gap:9px;font-family:var(--font-num);font-size:14.5px;font-weight:600;margin-bottom:12px;color:var(--text-primary)}
+.fan-card-head svg{color:var(--accent-lime)}
+.fan-select-wrap{display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border-hairline);border-radius:999px;padding:7px 13px;color:var(--text-secondary)}
+.fan-select{background:transparent;color:var(--text-primary);border:none;outline:none;font-size:12px;font-family:var(--font-ui);cursor:pointer}
+.fan-select option{background:var(--bg-card)}
+select.fan-select{background:var(--bg-canvas);border:1px solid var(--border-hairline);border-radius:10px;padding:9px 12px}
+.fan-select-wrap .fan-select{background:transparent;border:none;padding:0}
+.fan-dests{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fan-dest{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--border-hairline);border-radius:12px;padding:11px 13px;font-size:12px;font-weight:500;color:var(--text-primary);transition:border-color .12s,background .12s}
+.fan-dest:hover{background:rgba(198,241,53,.08);border-color:rgba(198,241,53,.35)}
+.fan-dest svg{color:var(--accent-lime)}
+.menu-row{display:flex;align-items:center;gap:11px;padding:9px 2px;border-bottom:1px solid var(--border-hairline)}
+.menu-ic{width:32px;height:32px;border-radius:10px;background:rgba(198,241,53,.09);color:var(--accent-lime);display:grid;place-items:center;flex-shrink:0}
+.menu-name{font-size:12.5px;font-weight:600}
+.qty-btn{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--border-hairline);color:var(--text-secondary);display:grid;place-items:center;transition:background .12s,color .12s}
+.qty-btn:hover{background:rgba(255,255,255,.12);color:var(--text-primary)}
+.qty-add{background:rgba(198,241,53,.12);color:var(--accent-lime);border-color:rgba(198,241,53,.3)}
+.fan-chat{flex:1;display:flex;flex-direction:column;gap:10px;min-height:220px;max-height:300px;overflow-y:auto;padding-right:4px}
+.fan-chat .msg-user{background:rgba(198,241,53,.14);border:1px solid rgba(198,241,53,.25);padding:9px 14px;border-radius:15px;max-width:85%}
+.fan-chat .msg-ai{background:rgba(255,255,255,.04);border:1px solid var(--border-hairline);padding:9px 14px;border-radius:15px;max-width:92%;align-self:flex-start}
+
 /* AI center status */
 .ai-feature{display:flex;align-items:center;gap:12px;padding:12px 10px}
 .ai-feature+.ai-feature{border-top:1px solid var(--border-hairline)}
