@@ -886,12 +886,42 @@ function addMsg(role,html){
   const log=$('#assistantLog');
   const row=document.createElement('div');
   row.className=`msg-row ${role==='user'?'user':''}`;
-  row.innerHTML=`<div class="msg-avatar ${role==='user'?'user-av':'ai-av'}">${role==='user'?'PR':'✦'}</div>
+  row.innerHTML=`<div class="msg-avatar ${role==='user'?'user-av':'ai-av'}">${role==='user'?'PR':ico('spark',13)}</div>
     <div class="msg ${role==='user'?'msg-user':'msg-ai'}">${html}</div>`;
   log.appendChild(row); log.scrollTop=log.scrollHeight;
   return row.querySelector('.msg');
 }
 function quickAsk(btn){ $('#assistantField').value=btn.textContent.replace(/^\S+\s/,''); askAssistant(new Event('submit')); }
+/* Claude/ChatGPT-style typewriter: network chunks land in bursts, so we
+   buffer the target text and reveal it smoothly at ~character level with a
+   blinking caret, easing faster when the buffer runs long. */
+function smoothTyper(el,log){
+  /* setTimeout, not rAF — rAF freezes in hidden tabs and the reply would
+     hang on the typing dots until the tab is refocused */
+  let target='', shown=0, timer=null, done=false;
+  const render=()=>{
+    const behind=target.length-shown;
+    shown=Math.min(target.length, shown+Math.max(1,Math.ceil(behind/24)));
+    el.innerHTML=md(target.slice(0,shown))+(shown<target.length||!done?'<span class="caret"></span>':'');
+    log.scrollTop=log.scrollHeight;
+    timer=shown<target.length?setTimeout(render,16):null;
+  };
+  return {
+    push(text){ target=text; if(!timer) render(); },
+    finish(full){ return new Promise(res=>{
+      target=full??target; done=true;
+      const t0=Date.now();
+      const wait=()=>{
+        if(shown>=target.length||Date.now()-t0>1500){   // grace period, then snap to full text
+          if(timer)clearTimeout(timer); timer=null;
+          el.innerHTML=md(target); log.scrollTop=log.scrollHeight; res();
+        } else setTimeout(wait,40);
+      };
+      if(!timer&&shown<target.length) render();
+      wait();
+    });},
+  };
+}
 async function askAssistant(e){
   e.preventDefault();
   const f=$('#assistantField'), q=f.value.trim(); if(!q) return;
@@ -905,14 +935,15 @@ async function askAssistant(e){
   const system=`You are the StadiumOS AI assistant for stadium operations staff at FIFA World Cup 2026 (venue: MetLife Stadium, East Rutherford NJ). Be concise (2-5 sentences or a short bullet list), operational, specific. You may use **bold** and "- " bullets, nothing else. Reply in the user's language. Anything dangerous (evacuation broadcast, mass notification) requires named human sign-off — remind them.${grounding?' You have Google Search — use it for live real-world data (weather, transit, news) and combine it with stadium state.':''}\n\n${stadiumContext()}`;
   try{
     let full;
+    const typer=smoothTyper(el,log);
     if(grounding){
       full=await AI.call('assistant',`${history?history+'\n':''}user: ${q}`,{system,grounded:true});
-      el.innerHTML=md(full);
+      typer.push(full);            // grounded calls aren't streamed — type them out anyway
     }else{
       full=await AI.stream('assistant',`${history?history+'\n':''}user: ${q}`,
-        { system, onChunk:(_,ft)=>{ el.innerHTML=md(ft)+'▍'; log.scrollTop=log.scrollHeight; } });
-      el.innerHTML=md(full);
+        { system, onChunk:(_,ft)=>typer.push(ft) });
     }
+    await typer.finish(full);
     el.insertAdjacentHTML('beforeend',`<div class="msg-meta">${grounding?'🌐 grounded · ':''}${AI.activeModel} · ${((performance.now()-t0)/1000).toFixed(1)}s</div>
       <div class="msg-actions"><button class="msg-act" onclick="navigator.clipboard.writeText(this.closest('.msg').innerText);this.textContent='✓ Copied'">⧉ Copy</button>
       <button class="msg-act" onclick="$('#assistantField').value=${JSON.stringify(q).replace(/"/g,'&quot;')};askAssistant(new Event('submit'))">↻ Retry</button></div>`);
