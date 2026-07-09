@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StadiumOS AI — FIFA World Cup 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Geist:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23C6F135'/><text x='50' y='68' font-size='50' text-anchor='middle'>⚽</text></svg>">
+</head>
+<body>
+<div class="app">
+  <!-- ══════════ LEFT RAIL ══════════ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">⚽</div>
+      <span class="brand-name">STADIUM<b>OS</b></span>
+    </div>
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-view="dashboard"><span class="nav-ic">▦</span>Dashboard</button>
+      <button class="nav-item" data-view="security"><span class="nav-ic">◉</span>Security</button>
+      <button class="nav-item" data-view="emergency"><span class="nav-ic">✚</span>Emergency</button>
+      <button class="nav-item" data-view="twin"><span class="nav-ic">◈</span>Digital Twin</button>
+      <button class="nav-item" data-view="volunteers"><span class="nav-ic">🤝</span>Volunteers</button>
+      <button class="nav-item" data-view="transport"><span class="nav-ic">⇄</span>Transport</button>
+      <button class="nav-item" data-view="sustainability"><span class="nav-ic">♻</span>Sustainability</button>
+      <button class="nav-item" data-view="aicenter"><span class="nav-ic">✦</span>AI Control</button>
+      <button class="nav-item" data-view="fan"><span class="nav-ic">☺</span>Fan App</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="ai-orb-card" onclick="openAssistant()">
+        <div class="ai-orb"></div>
+        <div class="ai-ask">Ask anything ... <span class="mic">🎙</span></div>
+      </div>
+      <div class="account">
+        <div class="avatar">PR</div>
+        <div>
+          <div class="acct-name">Priya R.</div>
+          <div class="acct-role">Stadium Ops Manager</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════ MAIN ══════════ -->
+  <main class="main">
+    <header class="topbar">
+      <div class="search"><span>⌕</span><input placeholder="Search incidents, sections, units..." id="globalSearch"></div>
+      <div class="topbar-right">
+        <div class="pill pill-live"><span class="dot dot-red pulse"></span>LIVE · MetLife Stadium</div>
+        <div class="clock" id="clock">--:--:--</div>
+        <button class="icon-btn" title="Settings">⚙</button>
+        <button class="icon-btn" title="Notifications" id="bellBtn">🔔<span class="badge" id="notifBadge">3</span></button>
+      </div>
+    </header>
+
+    <div class="views" id="views"></div>
+  </main>
+</div>
+
+<!-- ══════════ AI ASSISTANT DRAWER ══════════ -->
+<div class="assistant-overlay" id="assistantOverlay" onclick="closeAssistant(event)">
+  <div class="assistant" onclick="event.stopPropagation()">
+    <div class="assistant-head">
+      <div class="assistant-title">Stadium Assistant</div>
+      <span class="model-pill" id="modelPill">gemini-2.5-flash</span>
+      <div style="flex:1"></div>
+      <button class="ground-toggle" id="groundToggle" onclick="toggleGrounding(this)" title="Ground answers in live Google Search data">🌐</button>
+      <button class="head-btn" onclick="clearChat()" title="New chat">✎</button>
+      <button class="head-btn" onclick="closeAssistant()" title="Close">✕</button>
+    </div>
+    <div class="assistant-log" id="assistantLog">
+      <div class="chat-hero" id="chatHero">
+        <div class="ai-orb" style="width:64px;height:64px"></div>
+        <div class="hero-title">How can I help, Priya?</div>
+        <div class="hero-sub">I see live crowd, incidents, energy &amp; transport data — ask in any language.</div>
+        <div class="hero-chips">
+          <button class="sug-chip" onclick="quickAsk(this)">📊 Crowd status</button>
+          <button class="sug-chip" onclick="quickAsk(this)">🚑 Nearest medical unit to Sec 114</button>
+          <button class="sug-chip" onclick="quickAsk(this)">🌦 Weather risk for egress</button>
+          <button class="sug-chip" onclick="quickAsk(this)">⚠ Draft evacuation plan</button>
+        </div>
+      </div>
+    </div>
+    <div class="assistant-input-wrap">
+      <form class="composer" onsubmit="askAssistant(event)">
+        <textarea id="assistantField" placeholder="Message Stadium Assistant..." rows="1"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();askAssistant(event)}"></textarea>
+        <div class="composer-row">
+          <button type="button" class="composer-btn" id="voiceBtn" onclick="startVoice()" title="Voice input">🎙</button>
+          <span class="composer-hint" id="groundHint"></span>
+          <button class="composer-send" type="submit" title="Send">↑</button>
+        </div>
+      </form>
+      <div class="composer-note">AI can make mistakes — critical actions always need human sign-off.</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="config.js"></script>
+<script src="gemini.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
