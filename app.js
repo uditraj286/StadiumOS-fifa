@@ -95,10 +95,10 @@ security: () => `
   </div>
   <div style="display:flex;flex-direction:column;gap:18px">
     <div class="card">
-      <div class="section-title" style="margin-bottom:12px">Threat Alerts</div>
-      ${qrow('🔴','rgba(232,67,59,.14)','Density surge — Section 105','ETA to threshold: 8 min · confidence 91%','pill-pending','Act now','sec-105')}
-      ${qrow('👁','rgba(240,166,59,.14)','Unattended bag — Gate D','CCTV-flagged · steward en route','pill-warn','Dispatched','')}
-      ${qrow('🚧','rgba(45,217,196,.12)','Ramp C flow anomaly','Counter-flow detected, minor','pill-teal','Monitor','')}
+      <div class="section-row" style="margin:0 0 12px"><div class="section-title">Threat Alerts</div>
+      <button class="btn btn-ghost" onclick="genThreatBrief(this)" style="padding:6px 13px;font-size:11px">✦ Shift briefing</button></div>
+      <div id="threatList">${THREATS.map(threatRow).join('')}</div>
+      <div id="threatBrief"></div>
     </div>
     <div class="card">
       <div class="section-row" style="margin:0 0 10px"><div class="section-title">AI Recommendation</div>
@@ -126,6 +126,24 @@ security: () => `
 <div class="grid-4">
   ${cam('CAM-105-N','Section 105','flagged: density')}${cam('CAM-D-02','Gate D','flagged: object')}
   ${cam('CAM-C-RAMP','Ramp C','flagged: flow')}${cam('CAM-114-S','Section 114','nominal')}
+</div>
+<div class="section-row"><div class="section-title">International Visitor Safety</div>
+<span class="pill pill-teal"><span class="dot dot-teal pulse"></span>41% of tonight's crowd is international</span></div>
+<div class="grid-2">
+  <div class="card">
+    <div class="fan-card-head">${ico('mega',16)} Multilingual Safety Broadcast</div>
+    <div class="act-sub" style="margin-bottom:10px;line-height:1.55">Type a safety instruction once — every fan phone receives it in their own language, instantly. Human sign-off required before send.</div>
+    <input id="safetyIn" placeholder="e.g. Section 105 concourse congested — use Ramp D" style="width:100%;background:var(--bg-canvas);border:1px solid var(--border-hairline);border-radius:var(--r-input);padding:11px 14px;font-size:13px;margin-bottom:10px">
+    <button class="btn btn-lime" onclick="genSafetyBroadcast(this)">✦ Generate in 5 languages</button>
+    <div id="safetyOut"></div>
+  </div>
+  <div class="card">
+    <div class="fan-card-head">${ico('pin',16)} Lost Person Finder — AI matching</div>
+    <div class="act-sub" style="margin-bottom:10px;line-height:1.55">Describe a missing companion — AI matches against live found-person and sighting reports from stewards.</div>
+    <input id="lostIn" placeholder="e.g. boy, ~8, red Mexico jersey, near Gate C" style="width:100%;background:var(--bg-canvas);border:1px solid var(--border-hairline);border-radius:var(--r-input);padding:11px 14px;font-size:13px;margin-bottom:10px">
+    <button class="btn btn-lime" onclick="genLostMatch(this)">✦ Search reports</button>
+    <div id="lostOut"></div>
+  </div>
 </div>`,
 
 emergency: () => `
@@ -240,8 +258,12 @@ transport: () => `
 </div>`,
 
 sustainability: () => `
-<div class="view-head"><div class="view-title">Sustainability Dashboard</div>
-<div class="view-sub">Live ESG telemetry — dashboards match the end-of-day audit, not vibes</div></div>
+<div class="view-head" style="display:flex;justify-content:space-between;align-items:flex-end">
+  <div><div class="view-title">Sustainability Dashboard</div>
+  <div class="view-sub">Live ESG telemetry — dashboards match the end-of-day audit, not vibes</div></div>
+  <button class="btn btn-lime" onclick="genESGReport(this)">✦ ESG Report</button>
+</div>
+<div id="esgOut"></div>
 <div class="grid-4" style="margin-bottom:22px">
   ${kpi('⚡','chip-lime','glow-lime','Energy','38.2 MW','−6%','delta-up','vs pre-AI baseline')}
   ${kpi('💧','chip-teal','glow-teal','Water','512 m³','−11%','delta-up','smart-fixture savings')}
@@ -250,17 +272,19 @@ sustainability: () => `
 </div>
 <div class="split-21">
   <div class="card">
-    <div class="section-title" style="margin-bottom:6px">Energy Profile — Matchday</div>
+    <div class="section-row" style="margin:0 0 6px"><div class="section-title">Energy Profile — Matchday</div>
+    <button class="btn btn-ghost" onclick="genChartExplain(this)" style="padding:6px 13px;font-size:11px">✦ Explain</button></div>
     <div class="act-sub">MW draw, actual vs AI-optimized schedule</div>
     <div class="chart-wrap">${energyChart()}</div>
+    <div id="chartExplain"></div>
   </div>
   <div class="card">
     <div class="section-row" style="margin:0 0 12px"><div class="section-title">AI Optimization Queue</div>
     <button class="btn btn-ghost" onclick="genSustain(this)" style="padding:6px 13px;font-size:11px">✦ Generate new</button></div>
     <div id="sustainQueue"></div>
-    ${qrow('❄','rgba(45,217,196,.12)','Pre-cool bowl 30 min earlier','Saves 1.8 MWh vs reactive HVAC','pill-ok','Applied','')}
-    ${qrow('💡','rgba(198,241,53,.12)','Dim concourse LEDs 20% at halftime','Crowd density permits · saves 0.4 MWh','pill-teal','Pending','')}
-    ${qrow('🚿','rgba(45,217,196,.12)','Stagger pitch irrigation','Off-peak water pricing window','pill-ok','Applied','')}
+    ${qrow('❄','rgba(45,217,196,.12)','Pre-cool bowl 30 min earlier','Saves 1.8 MWh vs reactive HVAC','pill-ok','Applied','sus-detail')}
+    ${qrow('💡','rgba(198,241,53,.12)','Dim concourse LEDs 20% at halftime','Crowd density permits · saves 0.4 MWh','pill-teal','Pending','sus-detail')}
+    ${qrow('🚿','rgba(45,217,196,.12)','Stagger pitch irrigation','Off-peak water pricing window','pill-ok','Applied','sus-detail')}
   </div>
 </div>`,
 
@@ -783,6 +807,7 @@ function secClick(e){
 function reviewAlert(id,btn){
   if(id==='review-105'||id==='sec-105'){ go('security'); toast('Opened Security Dashboard','Section 105 flagged — AI recommendation ready'); }
   else if(id==='vol-task'){ genVolInstructions(btn.closest('.qrow').querySelector('.qtitle').textContent,btn); }
+  else if(id==='sus-detail'){ genSusDetail(btn.closest('.qrow').querySelector('.qtitle').textContent,btn); }
   else toast('Alert opened','Detail panel');
 }
 function approveRec(btn){
@@ -1115,9 +1140,165 @@ async function genSustain(btn){
       `Generate 2 new energy/water/waste optimization actions as a JSON array: [{"icon":"emoji","title":"short action","impact":"quantified saving"}]. Be specific to current state. Output ONLY the JSON array.`,
       { system: stadiumContext(), temperature: 0.8 });
     const items=extractJSON(raw);
-    $('#sustainQueue').innerHTML=items.map(i=>qrow(i.icon,'rgba(198,241,53,.1)',i.title,i.impact,'pill-teal','AI · New','')).join('');
+    $('#sustainQueue').innerHTML=items.map(i=>qrow(i.icon,'rgba(198,241,53,.1)',i.title,i.impact,'pill-teal','AI · New','sus-detail')).join('');
     toast('Optimizations generated','2 new actions from live telemetry — gemini-2.5-flash');
   }catch(e){ toast('Fallback active','Optimization generation unavailable','warn'); }
+  busy(btn,false);
+}
+
+/* ───── Security: stateful threat alerts ───── */
+const THREATS=[
+  {id:'t1',ic:'alert',bg:'rgba(232,67,59,.14)',title:'Density surge — Section 105',meta:'ETA to threshold: 8 min · confidence 91%',sev:'pill-pending',status:'Act now',active:true},
+  {id:'t2',ic:'pin',bg:'rgba(240,166,59,.14)',title:'Unattended bag — Gate D',meta:'CCTV-flagged · steward en route',sev:'pill-warn',status:'Dispatched',active:true},
+  {id:'t3',ic:'compass',bg:'rgba(45,217,196,.12)',title:'Ramp C flow anomaly',meta:'Counter-flow detected, minor',sev:'pill-teal',status:'Monitor',active:true},
+];
+function threatRow(t){
+  return `<div class="qrow" id="row-${t.id}"><div class="qthumb" style="background:${t.bg}">${ico(t.ic,18)}</div>
+  <div class="qbody"><div class="qtitle">${t.title}</div><div class="qmeta">${t.meta}</div></div>
+  <span class="pill ${t.sev}" style="padding:5px 12px;font-size:10.5px" id="st-${t.id}">${t.status}</span>
+  ${t.status==='Act now'?`<button class="btn btn-red" style="padding:7px 14px;font-size:11px" onclick="actNow('${t.id}',this)">Act now</button>`:''}
+  <button class="btn btn-ghost" onclick="reviewThreat('${t.id}',this)">Review</button></div>
+  <div id="detail-${t.id}"></div>`;
+}
+async function actNow(id,btn){
+  const t=THREATS.find(x=>x.id===id);
+  busy(btn,true);
+  try{
+    const txt=await AI.call('crowd_prediction',
+      `IMMEDIATE ACTION ORDER needed for: "${t.title}" (${t.meta}). Give the security lead exactly 3 numbered actions to execute in the next 5 minutes — who moves where, what gets closed/opened, what to broadcast. Terse command style.`,
+      { system: stadiumContext(), temperature: 0.4 });
+    const st=document.getElementById(`st-${id}`);
+    st.textContent='Responding'; st.className='pill pill-warn';
+    btn.textContent='✓ Executing'; btn.disabled=true; btn.style.opacity=.6;
+    document.getElementById(`detail-${id}`).innerHTML=
+      `<div class="act-sub" style="line-height:1.7;padding:12px 14px;margin:6px 0 10px;background:rgba(232,67,59,.06);border:1px solid rgba(232,67,59,.3);border-radius:12px">
+      <b style="color:#ff8b85">${ico('alert',12)} Action order — executing</b><br>${md(txt)}
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-lime" onclick="resolveThreat('${id}',this)">✓ Mark resolved</button>
+        <button class="btn btn-ghost" onclick="editPlan('detail-${id}',this)">✎ Modify</button>
+      </div></div>`;
+    toast('Action order issued',`${t.title} · units moving now`,'crit');
+    pushActivity('🛡','chip-red','Action order executed',`${t.title} · by Priya R.`);
+  }catch(e){ toast('Fallback active','Standard response protocol dispatched instead','warn'); }
+  busy(btn,false);
+}
+async function reviewThreat(id,btn){
+  const t=THREATS.find(x=>x.id===id);
+  busy(btn,true);
+  try{
+    const txt=await AI.call('incident_summary',
+      `Threat assessment for the security lead: "${t.title}" (${t.meta}). Give: current risk level (LOW/MED/HIGH), what happens if we do nothing for 10 minutes, and the recommended posture. 3 short lines.`,
+      { system: stadiumContext(), temperature: 0.4 });
+    document.getElementById(`detail-${id}`).innerHTML=
+      `<div class="act-sub" style="line-height:1.7;padding:12px 14px;margin:6px 0 10px;background:rgba(45,217,196,.05);border:1px solid rgba(45,217,196,.25);border-radius:12px">
+      <b style="color:var(--accent-teal)">AI assessment</b><br>${md(txt)}</div>`;
+  }catch(e){ toast('Fallback active','Assessment unavailable — camera feed still live','warn'); }
+  busy(btn,false);
+}
+function resolveThreat(id,btn){
+  const t=THREATS.find(x=>x.id===id);
+  t.status='Resolved'; t.sev='pill-ok';
+  const st=document.getElementById(`st-${id}`);
+  st.textContent='Resolved'; st.className='pill pill-ok';
+  document.getElementById(`detail-${id}`).innerHTML='';
+  if(id==='t1'){ S.sections[4].density=68; }   // resolving the surge cools the section on the heatmap
+  toast('Threat resolved',`${t.title} · logged as prevented incident`);
+  pushActivity('✓','chip-lime','Threat resolved',`${t.title} · prevented, not reacted to`);
+}
+async function genThreatBrief(btn){
+  busy(btn,true);
+  try{
+    const txt=await AI.call('incident_summary',
+      `Write a 3-sentence security shift briefing covering all active threats: ${THREATS.map(t=>`${t.title} (${t.status})`).join('; ')}. Prioritize, then one watch-item for the next 30 minutes.`,
+      { system: stadiumContext(), temperature: 0.4 });
+    document.getElementById('threatBrief').innerHTML=
+      `<div class="act-sub" style="line-height:1.7;padding:12px 14px;margin-top:10px;background:rgba(198,241,53,.05);border:1px solid rgba(198,241,53,.25);border-radius:12px"><b style="color:var(--accent-lime)">Shift briefing — ${now()}</b><br>${md(txt)}</div>`;
+  }catch(e){ toast('Fallback active','Briefing unavailable','warn'); }
+  busy(btn,false);
+}
+
+/* ───── International visitor safety ───── */
+async function genSafetyBroadcast(btn){
+  const src=$('#safetyIn').value.trim(); if(!src) return toast('Type the instruction first','','warn');
+  busy(btn,true);
+  try{
+    const raw=await AI.call('translation',
+      `Safety instruction for stadium fans: "${src}". Render it calm, clear and short in English, Spanish, French, Arabic and Portuguese. Output ONLY JSON: {"en":"...","es":"...","fr":"...","ar":"...","pt":"..."}`,
+      { temperature: 0.2 });
+    const t=extractJSON(raw);
+    $('#safetyOut').innerHTML=[['EN',t.en],['ES',t.es],['FR',t.fr],['AR',t.ar],['PT',t.pt]]
+      .map(([l,v])=>`<div style="padding:8px 0;border-bottom:1px solid var(--border-hairline)"><span class="pill pill-dim" style="padding:2px 9px;font-size:9px;margin-right:8px">${l}</span><span style="font-size:12.5px">${v}</span></div>`).join('')+
+      `<button class="btn btn-red" style="margin-top:12px" onclick="this.textContent='✓ Sent — signed: Priya R.';this.disabled=true;toast('Broadcast sent to 82,450 fan apps','Each fan received it in their own language','crit');pushActivity('📣','chip-red','Safety broadcast sent','5 languages · signed by Priya R.')">Send to all fan apps — requires sign-off</button>`;
+  }catch(e){ toast('Fallback active','Translation service busy','warn'); }
+  busy(btn,false);
+}
+const FOUND_REPORTS=[
+  'Steward S-4 (Gate C, 5 min ago): child ~7-9yo, red football jersey, waiting at Guest Services C',
+  'Steward S-9 (Sec 118, 12 min ago): elderly man, blue jacket, asking for directions in French',
+  'Guest Services B (20 min ago): teenage girl, white hijab, green scarf, waiting with staff',
+];
+async function genLostMatch(btn){
+  const q=$('#lostIn').value.trim(); if(!q) return toast('Describe the person first','','warn');
+  busy(btn,true);
+  try{
+    const raw=await AI.call('lost_found',
+      `Missing person report: "${q}". Found/sighting reports on file:\n${FOUND_REPORTS.map((r,i)=>`${i+1}. ${r}`).join('\n')}\nOutput ONLY JSON: {"match":<report number or 0>,"confidence":<0-100>,"reason":"...","action":"one-line instruction for the reporter"}`,
+      { temperature: 0.2 });
+    const m=extractJSON(raw);
+    $('#lostOut').innerHTML=m.match>0
+      ?`<div class="act-sub" style="line-height:1.7;padding:12px 14px;background:rgba(198,241,53,.06);border:1px solid rgba(198,241,53,.3);border-radius:12px">
+        <b style="color:var(--accent-lime)">Probable match — ${m.confidence}% confidence</b><br>${FOUND_REPORTS[m.match-1]}<br><i style="color:var(--text-secondary)">${m.reason}</i><br><b style="color:var(--text-primary)">→ ${m.action}</b></div>`
+      :`<div class="act-sub" style="padding:12px 14px;background:rgba(240,166,59,.07);border:1px solid rgba(240,166,59,.3);border-radius:12px">No match yet — description pushed to all 184 volunteers' devices. ${m.action||''}</div>`;
+    pushActivity('🔎','chip-teal','Lost-person search',`AI matched against ${FOUND_REPORTS.length} live reports`);
+  }catch(e){ toast('Fallback active','Description relayed to stewards by radio','warn'); }
+  busy(btn,false);
+}
+
+/* ───── Sustainability: functional queue + reports ───── */
+async function genSusDetail(title,btn){
+  busy(btn,true);
+  try{
+    const txt=await AI.call('energy_opt',
+      `Explain this stadium sustainability action for the ops lead: "${title}". Give: how it works (1 line), quantified saving, any comfort/safety trade-off, and go/no-go recommendation. 4 short lines.`,
+      { system: stadiumContext(), temperature: 0.4 });
+    const div=document.createElement('div');
+    div.innerHTML=`<div class="act-sub" style="line-height:1.7;padding:12px 14px;margin:6px 0 10px;background:rgba(45,217,196,.05);border:1px solid rgba(45,217,196,.25);border-radius:12px">
+      ${md(txt)}<div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-lime" onclick="applySus('${title.replace(/'/g,'')}',this)">✓ Apply</button>
+      <button class="btn btn-ghost" onclick="this.closest('div').parentElement.parentElement.remove()">Dismiss</button></div></div>`;
+    btn.closest('.qrow').after(div.firstElementChild);
+  }catch(e){ toast('Fallback active','Detail unavailable','warn'); }
+  busy(btn,false);
+}
+function applySus(title,btn){
+  S.powerMW=Math.max(30,+(S.powerMW-0.6).toFixed(1));
+  btn.textContent='✓ Applied'; btn.disabled=true; btn.style.opacity=.6;
+  toast('Optimization applied',`${title} · power draw now ${S.powerMW} MW`);
+  pushActivity('♻','chip-lime','Optimization applied',`${title} · by Priya R.`);
+}
+async function genESGReport(btn){
+  busy(btn,true);
+  try{
+    const txt=await AI.call('exec_summary',
+      `Write tonight's ESG report for FIFA sustainability officers: energy ${S.powerMW} MW (−6% vs baseline), water ${S.waterM3} m³ (−11%), waste diversion 78% (target 75%), carbon 41 t CO2e (−14%). 4-5 sentences: status vs targets, the single biggest saving driver, one risk, one next action. Plain text.`,
+      { system: stadiumContext(), temperature: 0.5 });
+    $('#esgOut').innerHTML=`<div class="card" style="margin-bottom:18px;border-color:rgba(198,241,53,.25)">
+      <div class="section-row" style="margin:0 0 8px"><div class="section-title">✦ ESG Report — ${now()}</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="padding:5px 12px;font-size:10.5px" onclick="navigator.clipboard.writeText(this.closest('.card').innerText);this.textContent='✓ Copied'">⧉ Copy</button>
+        <span class="pill pill-ok"><span class="dot dot-lime"></span>audit-ready</span></div></div>
+      <div class="act-sub" style="line-height:1.75;font-size:13px">${md(txt)}</div></div>`;
+  }catch(e){ toast('Fallback active','Report generation busy','warn'); }
+  busy(btn,false);
+}
+async function genChartExplain(btn){
+  busy(btn,true);
+  try{
+    const txt=await AI.call('energy_opt',
+      `The matchday energy chart shows actual draw peaking at 52 MW around kickoff vs the AI-optimized schedule peaking at 46 MW, converging near 36-38 MW late. Explain to a non-engineer in 2-3 sentences what the optimization did and what it saved.`,
+      { temperature: 0.5 });
+    $('#chartExplain').innerHTML=`<div class="act-sub" style="line-height:1.7;margin-top:10px;padding:12px 14px;background:rgba(198,241,53,.05);border:1px solid rgba(198,241,53,.25);border-radius:12px">${md(txt)}</div>`;
+  }catch(e){ toast('Fallback active','Explanation unavailable','warn'); }
   busy(btn,false);
 }
 

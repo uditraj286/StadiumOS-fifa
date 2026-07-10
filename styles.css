@@ -28,7 +28,8 @@ input{font-family:inherit;color:var(--text-primary);background:none;border:none;
 .nav-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:var(--r-pill);color:var(--text-secondary);font-weight:500;font-size:13.5px;transition:background .12s,color .12s;text-align:left}
 .nav-item:hover{background:rgba(255,255,255,.04);color:var(--text-primary)}
 .nav-item.active{background:var(--accent-lime);color:#0B0D0C;font-weight:600}
-.nav-ic{width:20px;text-align:center;font-size:15px}
+.nav-ic{width:20px;display:grid;place-items:center}
+.nav-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sidebar-bottom{margin-top:auto;display:flex;flex-direction:column;gap:12px}
 .ai-orb-card{background:var(--bg-card);border:1px solid var(--border-hairline);border-radius:var(--r-card);padding:18px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s}
 .ai-orb-card:hover{border-color:rgba(198,241,53,.3)}
