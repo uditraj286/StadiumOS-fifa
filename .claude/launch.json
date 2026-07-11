@@ -6,6 +6,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["server.js"],
       "port": 4517
+    },
+    {
+      "name": "nexus-auth-client",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "fifa-nexus-auth/client", "--", "-p", "3100"],
+      "port": 3100
     }
   ]
 }

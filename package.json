@@ -1,0 +1,7 @@
+{
+  "name": "stadiumos-ai",
+  "version": "1.0.0",
+  "description": "AI Decision Intelligence platform for FIFA World Cup 2026 stadium operations",
+  "private": true,
+  "dependencies": {}
+}
