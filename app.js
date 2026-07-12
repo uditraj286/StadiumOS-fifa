@@ -76,7 +76,11 @@ dashboard: () => `
   <div class="card"><div class="qtitle">🔮 Crowd prediction</div><div class="act-sub" style="margin-top:8px;line-height:1.6">Halftime concourse surge predicted in <b style="color:var(--accent-lime)">38 min</b>. Sections 104–107 will exceed 80% density. Pre-position 6 stewards at Ramp C.</div></div>
   <div class="card"><div class="qtitle">🍔 Food inventory</div><div class="act-sub" style="margin-top:8px;line-height:1.6">Concourse B will exhaust cold beverages by minute 71 at current velocity. Restock run scheduled — saves an estimated <b style="color:var(--accent-teal)">2,400 lost sales</b>.</div></div>
   <div class="card"><div class="qtitle">🌦 Weather impact</div><div class="act-sub" style="margin-top:8px;line-height:1.6">Rain probability 64% post-match. Expect covered-transit demand +30%. Transport dashboard notified automatically.</div></div>
-</div>`,
+</div>
+
+<div class="section-row" style="margin-top:26px"><div class="section-title">Live Fan Experience Score</div>
+  <button class="btn btn-ghost" onclick="genFX(this)">✦ Recompute</button></div>
+<div class="card" id="fxCard">${fxCardBody(window.LIVE?.fan_experience?.[0])}</div>`,
 
 brain: () => `
 <div class="view-head" style="display:flex;justify-content:space-between;align-items:flex-end">
@@ -620,6 +624,35 @@ sustainability: () => `
     ${qrow('💡','rgba(198,241,53,.12)','Dim concourse LEDs 20% at halftime','Crowd density permits · saves 0.4 MWh','pill-teal','Pending','sus-detail')}
     ${qrow('🚿','rgba(45,217,196,.12)','Stagger pitch irrigation','Off-peak water pricing window','pill-ok','Applied','sus-detail')}
   </div>
+</div>
+
+<div class="section-row" style="margin-top:26px"><div class="section-title">🍔 AI Food Waste Predictor</div>
+  <button class="btn btn-lime" onclick="predictWaste(this)">✦ Predict pre-halftime waste</button></div>
+<div class="card">
+  <div class="act-sub" style="margin-bottom:10px">Gemini forecasts unsold inventory per outlet before halftime and recommends transfers — waste prevented before it exists. Saved to <span class="mono">food_waste</span>, live on every client.</div>
+  <div id="wasteOut">${wasteTable(window.LIVE?.food_waste)}</div>
+</div>`,
+
+graph: () => `
+<div class="view-head"><div class="view-title">Tournament Knowledge Graph</div>
+<div class="view-sub">No module thinks alone — weather → crowd → transport → food → waste → operations. Ask anything; the AI reasons across every connected system and shows its causal path.</div></div>
+<div class="card">
+  <div style="display:flex;gap:10px">
+    <input id="kgIn" placeholder='e.g. "Rain starts at minute 70 — what happens to food waste?"'
+      style="flex:1;background:var(--bg-canvas);color:var(--text-primary);border:1px solid var(--border-hairline);border-radius:12px;padding:12px 14px;font-size:13px"
+      onkeydown="if(event.key==='Enter')askGraph(this.nextElementSibling)">
+    <button class="btn btn-lime" onclick="askGraph(this)">✦ Reason across systems</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+    ${['Rain at minute 70 — impact on waste?','Metro delay of 20 min — food demand?','Attendance +15% — sustainability hit?'].map(q=>
+      `<button class="btn btn-ghost" style="padding:6px 12px;font-size:11px" onclick="document.getElementById('kgIn').value='${q}';askGraph(this)">${q}</button>`).join('')}
+  </div>
+  <div id="kgOut"></div>
+</div>
+<div class="card" style="margin-top:18px">
+  <div class="section-title" style="margin-bottom:10px">The connected domains</div>
+  <div class="cascade">${['🌦 Weather','◍ Crowd','🚇 Transport','🍔 Food','♻ Waste','⚡ Operations'].map(s=>`<span class="cas-step">${s}</span>`).join('<span class="cas-arrow">→</span>')}</div>
+  <div class="act-sub" style="margin-top:12px;line-height:1.7">Every AI answer on this platform is grounded in one shared state (<span class="mono">stadiumContext()</span>) — so a question about waste can be answered through weather, crowd, and transport in a single causal chain, not module-by-module guesses.</div>
 </div>`,
 
 aicenter: () => {
@@ -1294,6 +1327,9 @@ async function prioritizeHazards(btn){
       { system: stadiumContext(), temperature: 0.4 });
     document.getElementById('hazOut').innerHTML=`<div class="act-sub" style="line-height:1.7;padding:12px 14px;margin-top:10px;background:rgba(232,67,59,.06);border:1px solid rgba(232,67,59,.3);border-radius:12px"><b style="color:#ff8b85">Response order — resource-aware</b><br>${md(txt)}</div>`;
     recLog('🌪','chip-red','Multi-hazard prioritized','4 hazards + medical ranked · interaction flagged');
+    // Persist the emergency recommendation → emergency_alerts (live).
+    window.Firestore?.save('emergency',{ title:'Multi-hazard prioritization', description:HAZARDS.map(h=>h.t).join('; '),
+      type:'multi-hazard', severity:'high', location:'Command Center', status:'in_progress', aiRecommendation:txt });
   }catch(e){ toast('Fallback active','Severity-order fallback: fire, smoke, power, weather','warn'); }
   busy(btn,false);
 }
@@ -1409,6 +1445,8 @@ async function genFinalReport(btn){
       <button class="btn btn-ghost" style="padding:5px 12px;font-size:10.5px" onclick="navigator.clipboard.writeText(this.closest('.card').innerText);this.textContent='✓ Copied'">⧉ Copy</button></div>
       <div class="act-sub" style="line-height:1.75">${md(txt)}</div></div>`;
     toast('Report generated','From the auto-recorded timeline — nobody wrote it by hand');
+    // Persist the incident summary → ai_reports (live to every dashboard).
+    window.Firestore?.save('incident',{ title:`Post-incident report — ${now()}`, summary:txt, generatedBy:AI.activeModel });
   }catch(e){ toast('Fallback active','Raw timeline exported for manual write-up','warn'); }
   busy(btn,false);
 }
@@ -1474,6 +1512,15 @@ async function genHorizon(btn){
     document.getElementById('horizonStrip').innerHTML=cards.map(c=>hzCard(c.t,pill[c.risk]||'pill-teal',c.body)).join('');
     toast('Horizon refreshed','Forecast regenerated from live stadium state');
     pushActivity('🔮','chip-lime','Predictive horizon updated','NOW / +5 / +15 / +30 min re-forecast');
+    // Persist the Gemini forecast → Firestore (crowd_predictions + ai_reports),
+    // which streams back to every connected dashboard in real time.
+    const risky=cards.find(c=>c.risk==='high')||cards[cards.length-1];
+    const riskMap={high:'high',med:'medium',low:'low'};
+    window.Firestore?.save('crowd',{ zone:'Stadium-wide', currentCrowd:S.attendance,
+      predictedCrowd:Math.round(S.attendance*1.02), riskLevel:riskMap[risky?.risk]||'medium',
+      confidence:0.8, recommendation:risky?.body||'Monitoring nominal.' });
+    window.Firestore?.save('report',{ title:'Predictive horizon', summary:cards.map(c=>`${c.t}: ${c.body}`).join(' '),
+      generatedBy:AI.activeModel });
   }catch(e){ toast('Fallback active','Showing last computed horizon','warn'); }
   busy(btn,false);
 }
@@ -2134,6 +2181,8 @@ async function genEgress(btn){
       `Write ONE specific egress-management recommendation (2-3 sentences) with numbers, based on parking and transit state. Plain text.`,
       { system: stadiumContext(), temperature: 0.6 });
     $('#egressRec').innerHTML=md(txt);
+    // Persist the transport/egress advice → ai_reports (live).
+    window.Firestore?.save('report',{ title:'Transport egress advice', summary:txt, generatedBy:AI.activeModel });
   }catch(e){ toast('Fallback active','Keeping last recommendation','warn'); }
   busy(btn,false);
 }
@@ -2170,6 +2219,10 @@ async function genSustain(btn){
     const items=extractJSON(raw);
     $('#sustainQueue').innerHTML=items.map(i=>qrow(i.icon,'rgba(198,241,53,.1)',i.title,i.impact,'pill-teal','AI · New','sus-detail')).join('');
     toast('Optimizations generated','2 new actions from live telemetry — gemini-2.5-flash');
+    // Persist the sustainability insight → sustainability singleton (live).
+    const top=items[0];
+    if(top) window.Firestore?.save('sustainability',{ energyUsage:S.powerMW, waterUsage:S.waterM3,
+      wasteCollected:78, carbonEmission:41, aiSuggestion:`${top.title} — ${top.impact}` });
   }catch(e){ toast('Fallback active','Optimization generation unavailable','warn'); }
   busy(btn,false);
 }
@@ -2505,6 +2558,140 @@ setInterval(()=>{
   if(document.getElementById('sitTimeline')) sitPush(ev[0],ev[2]+' — '+ev[3],'signal');
   const b=$('#notifBadge'); b.textContent=Math.min(99,+b.textContent+1);
 },12000);
+
+/* ───── Fan Experience Score · Food Waste Predictor · Knowledge Graph ─────
+   All three follow the platform loop: Gemini → Firestore (backend write) →
+   snapshot listener → every connected dashboard repaints live. */
+
+const FX_DEFAULT={overallScore:94,navigation:98,foodWait:91,accessibility:100,transport:88,safety:99,
+  aiExplanation:'Transport is the drag: Lot F saturation adds 9 min to car egress. Fix: push staggered-exit notifications at minute 80.'};
+
+function fxBar(label,v){
+  const c=v>=95?'var(--accent-lime)':v>=85?'var(--accent-teal)':'var(--accent-amber)';
+  return `<div style="flex:1;min-width:110px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px">
+    <span style="color:var(--text-secondary)">${label}</span><b>${Math.round(v)}%</b></div>
+    <div style="height:5px;border-radius:3px;background:var(--border-hairline)"><div style="height:5px;border-radius:3px;width:${v}%;background:${c}"></div></div></div>`;
+}
+function fxCardBody(d){
+  d=d||FX_DEFAULT;
+  const face=d.overallScore>=90?'😊':d.overallScore>=75?'🙂':'😟';
+  return `<div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap">
+    <div style="text-align:center;min-width:120px"><div style="font-size:34px">${face}</div>
+      <div style="font-size:30px;font-weight:700;color:var(--accent-lime)">${Math.round(d.overallScore)}%</div>
+      <div class="qmeta">overall experience</div></div>
+    <div style="flex:1;display:flex;gap:16px;flex-wrap:wrap;min-width:260px">
+      ${fxBar('Navigation',d.navigation)}${fxBar('Food wait',d.foodWait)}${fxBar('Accessibility',d.accessibility)}
+      ${fxBar('Transport',d.transport)}${fxBar('Safety',d.safety)}</div>
+    </div>
+  <div class="act-sub" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-hairline);line-height:1.6"><b style="color:var(--accent-lime)">✦ Why:</b> ${d.aiExplanation}</div>`;
+}
+async function genFX(btn){
+  busy(btn,true);
+  try{
+    const raw=await AI.call('exec_summary',
+      `Score the live fan experience from stadium state. Output ONLY JSON: {"overallScore":0-100,"navigation":0-100,"foodWait":0-100,"accessibility":0-100,"transport":0-100,"safety":0-100,"aiExplanation":"1-2 sentences: which category drags the score down, why (with a number), and the single best fix"}`,
+      { system: stadiumContext(), temperature: 0.5 });
+    const d=extractJSON(raw);
+    const el=document.getElementById('fxCard'); if(el) el.innerHTML=fxCardBody(d);
+    window.Firestore?.save('experience',d);
+    toast('Experience score recomputed','Saved to fan_experience — live on every client');
+    pushActivity('😊','chip-lime','Fan experience scored',`${Math.round(d.overallScore)}% overall — AI explained the drag`);
+  }catch(e){ toast('Fallback active','Showing last computed score','warn'); }
+  busy(btn,false);
+}
+
+function wasteRow(w,i){
+  const conf=Math.round((w.confidence||0)*100);
+  return `<tr><td style="font-weight:600">${w.outlet}</td><td>${w.item}</td>
+    <td class="mono" style="color:var(--accent-amber)">${w.predictedUnsold} units</td>
+    <td class="mono">${conf}%</td><td class="act-sub" style="line-height:1.5">${w.recommendation}</td>
+    <td>${w.status==='actioned'?'<span class="pill pill-ok" style="padding:4px 10px;font-size:9.5px">✓ Actioned</span>'
+      :`<button class="btn btn-lime" style="padding:5px 12px;font-size:10.5px" onclick="actionWaste('${w.id||''}',this)">Transfer</button>`}</td></tr>`;
+}
+function wasteTable(list){
+  if(!list||!list.length) return `<div class="act-sub" style="padding:10px 0">No predictions yet — run the predictor to forecast unsold inventory before halftime.</div>`;
+  return `<table class="table"><tr><th>Outlet</th><th>Item</th><th>Predicted unsold</th><th>Confidence</th><th>Recommendation</th><th></th></tr>
+    ${list.slice(0,6).map(wasteRow).join('')}</table>`;
+}
+async function predictWaste(btn){
+  busy(btn,true);
+  try{
+    const raw=await AI.call('energy_opt',
+      `Food-waste prediction, 20 minutes before halftime. Forecast unsold inventory for 3 outlets. Output ONLY a JSON array: [{"outlet":"Food Court A-F","item":"specific item","predictedUnsold":number,"confidence":0-1,"recommendation":"transfer/discount action naming a destination outlet"}] Base volumes on attendance and crowd distribution.`,
+      { system: stadiumContext(), temperature: 0.7 });
+    const items=extractJSON(raw).map(w=>({...w,status:'pending'}));
+    document.getElementById('wasteOut').innerHTML=wasteTable(items);
+    for(const w of items) window.Firestore?.save('foodwaste',w);
+    toast('Waste forecast ready',`${items.length} outlets flagged — transfers recommended before waste exists`);
+    pushActivity('🍔','chip-amber','Food waste predicted',items.map(w=>`${w.outlet}: ${w.predictedUnsold} ${w.item}`).join(' · '));
+  }catch(e){ toast('Fallback active','Predictor unavailable — try again','warn'); }
+  busy(btn,false);
+}
+async function actionWaste(id,btn){
+  btn.textContent='✓ Actioned'; btn.className='pill pill-ok'; btn.style.cssText='padding:4px 10px;font-size:9.5px;border:0';
+  if(id) try{ await window.Firestore?.service.updateDocument('food_waste',id,{status:'actioned'}); }catch(_){ }
+  toast('Transfer dispatched','Inventory move logged — waste prevented');
+}
+
+const KG_DOMAIN_IC={weather:'🌦',crowd:'◍',transport:'🚇',food:'🍔',waste:'♻',operations:'⚡',energy:'⚡',security:'🛡',medical:'✚'};
+async function askGraph(btn){
+  const q=document.getElementById('kgIn').value.trim();
+  if(!q) return toast('Ask a question first','e.g. "Rain at minute 70 — impact on waste?"','warn');
+  busy(btn,true);
+  const out=document.getElementById('kgOut');
+  out.innerHTML='<div style="margin-top:14px"><span class="typing"><i></i><i></i><i></i></span></div>';
+  try{
+    const raw=await AI.call('brain',
+      `You are the Tournament Knowledge Graph — you reason ACROSS domains (weather, crowd, transport, food, waste, energy, security, medical), never inside one silo. Question: "${q}"
+Output ONLY JSON: {"chain":[{"domain":"weather|crowd|transport|food|waste|operations|energy|security|medical","node":"3-5 word state","effect":"one short clause: what it causes next"}] (4-6 causal steps in order),
+"answer":"2-3 sentences: the cross-domain answer with numbers",
+"action":"the ONE operational move that breaks the bad chain or exploits the good one"}`,
+      { system: stadiumContext(), temperature: 0.5 });
+    const d=extractJSON(raw);
+    out.innerHTML=`<div style="margin-top:18px">
+      <div class="cascade">${d.chain.map(s=>`<span class="cas-step" title="${s.effect}">${KG_DOMAIN_IC[s.domain]||'✦'} ${s.node}</span>`).join('<span class="cas-arrow">→</span>')}</div>
+      <div class="act-sub" style="margin-top:14px;line-height:1.7">${md(d.answer)}</div>
+      <div class="card" style="margin-top:12px;padding:14px;background:rgba(198,241,53,.05);border-color:rgba(198,241,53,.25)">
+        <b style="color:var(--accent-lime);font-size:12px">✦ Break the chain:</b> <span class="act-sub">${d.action}</span></div></div>`;
+    window.Firestore?.save('report',{ title:`Knowledge Graph: ${q.slice(0,60)}`,
+      summary:`${d.chain.map(s=>s.node).join(' → ')} — ${d.answer} Action: ${d.action}`, generatedBy:AI.activeModel });
+    pushActivity('🕸','chip-lime','Cross-domain reasoning',`"${q.slice(0,50)}" · ${d.chain.length}-step causal chain`);
+  }catch(e){
+    out.innerHTML='<div class="act-sub" style="margin-top:14px;padding:12px 14px;background:rgba(240,166,59,.06);border:1px solid rgba(240,166,59,.3);border-radius:12px">Graph reasoning busy — try again in a moment.</div>';
+  }
+  busy(btn,false);
+}
+
+/* Live repaint: when Firestore streams changes, refresh these surfaces in place. */
+document.addEventListener('firestore:update',(e)=>{
+  const {collection,data}=e.detail||{};
+  if(collection==='fan_experience'&&data?.length){ const el=document.getElementById('fxCard'); if(el) el.innerHTML=fxCardBody(data[0]); }
+  if(collection==='food_waste'){ const el=document.getElementById('wasteOut'); if(el&&data?.length) el.innerHTML=wasteTable(data); }
+});
+
+/* KPI drill-down: the ↗ arrow on every KPI card jumps to the view that owns the metric. */
+const KPI_TARGETS=[
+  [/attendance|gates|density|sentiment/i,'security'],
+  [/power|energy|water|waste|carbon/i,'sustainability'],
+  [/medical/i,'emergency'],
+  [/transit|parking|shuttle|road|congestion/i,'transport'],
+  [/feature|latency|fallback|token/i,'aicenter'],
+];
+document.addEventListener('click',(e)=>{
+  const arrow=e.target.closest('.kpi-arrow'); if(!arrow) return;
+  const label=arrow.closest('.kpi')?.querySelector('.kpi-label')?.textContent||'';
+  const view=(KPI_TARGETS.find(([re])=>re.test(label))||[])[1];
+  const current=document.querySelector('.nav-item.active')?.dataset.view;
+  if(view&&view!==current){ go(view); toast('Drill-down',`${label.trim()} → ${view} view`); }
+});
+
+/* Liquid-glass nav: track the pointer per item so the specular sheen follows it. */
+document.getElementById('nav').addEventListener('pointermove',(e)=>{
+  const item=e.target.closest('.nav-item'); if(!item) return;
+  const r=item.getBoundingClientRect();
+  item.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+  item.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+});
 
 /* boot */
 go('dashboard');

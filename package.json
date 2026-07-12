@@ -3,5 +3,12 @@
   "version": "1.0.0",
   "description": "AI Decision Intelligence platform for FIFA World Cup 2026 stadium operations",
   "private": true,
-  "dependencies": {}
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "seed": "node scripts/seed-firestore.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.2"
+  }
 }

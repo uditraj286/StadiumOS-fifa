@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// StadiumOS AI — Firestore Security Rules
+//
+// Model: the public dashboard READS non-sensitive collections in real time.
+// NOBODY writes from the client — every write goes through the backend Admin
+// SDK (api/firestore.js), which bypasses these rules with a service-account
+// credential. So we default-deny writes everywhere and only open reads on the
+// collections the dashboard is allowed to see.
+//
+// Sensitive collections (emergency_alerts) may carry medical detail / PII and
+// are NOT publicly readable — serve them through an authenticated backend view
+// if the dashboard needs them.
+// ═══════════════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Public, dashboard-readable telemetry (read-only to clients) ──
+    match /stadium_status/{doc}    { allow read: if true;  allow write: if false; }
+    match /crowd_predictions/{doc} { allow read: if true;  allow write: if false; }
+    match /transport/{doc}         { allow read: if true;  allow write: if false; }
+    match /sustainability/{doc}    { allow read: if true;  allow write: if false; }
+    match /ai_reports/{doc}        { allow read: if true;  allow write: if false; }
+    match /notifications/{doc}     { allow read: if true;  allow write: if false; }
+    match /fan_experience/{doc}    { allow read: if true;  allow write: if false; }
+    match /food_waste/{doc}        { allow read: if true;  allow write: if false; }
+
+    // ── Sensitive: no public read, no client write ──
+    match /emergency_alerts/{doc}  { allow read: if false; allow write: if false; }
+
+    // ── Deny everything else by default ──
+    match /{document=**} { allow read, write: if false; }
+  }
+}

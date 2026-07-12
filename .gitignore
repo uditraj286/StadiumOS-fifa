@@ -1,6 +1,9 @@
-# secrets — never commit the API key
+# secrets — never commit the API key or the Firebase service account
 .env
 *.env.local
+serviceAccountKey.json
+*serviceAccount*.json
+firebase-adminsdk*.json
 
 # system junk
 node_modules/

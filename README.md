@@ -22,7 +22,7 @@ StadiumOS AI collapses that wall of screens into **one data model and one govern
 
 The product is built on four architectural commitments:
 
-**a) One data model, many surfaces.** A single live state object (`S` in `app.js`) — attendance, gates, 24 section densities, medical, power, water — is the *only* source of truth. Every view and every AI call reads from it (serialized by `stadiumContext()`), so the dashboards never disagree with the AI.
+**a) One data model, many surfaces.** A single live state object (`S` in `app.js`) — attendance, gates, 24 section densities, medical, power, water — is the *only* source of truth. Every view and every AI call reads from it (serialized by `stadiumContext()`), so the dashboards never disagree with the AI. For production, this is backed by a **Firebase Firestore real-time layer** (`firebase/`) — seven collections, snapshot listeners that update KPIs/charts/tables/notifications live with no page refresh, backend-only writes (Admin SDK), and secure rules. Gemini results auto-save into Firestore and stream to every connected client. It ships dormant (demo mode) until credentials are added — see **[SETUP-FIREBASE.md](SETUP-FIREBASE.md)**.
 
 **b) AI as a decision engine, not a chatbot.** The flagship surfaces (**Stadium Brain**, **Predictive Mission Control**, **Emergency Intelligence**) all follow the same loop:
 > **What is happening? → What will happen next? → Why? → What should we do? → What's the expected result?**
@@ -40,7 +40,7 @@ Every recommendation carries a **confidence score, risk level, expected improvem
 
 ## 3. How the Solution Works
 
-**Frontend** — vanilla HTML/CSS/JS, no framework, no build step. `app.js` renders 11 operational surfaces from a view registry; `styles.css` is a locked design system (dark control-room theme, lime/teal accents). A simulated realtime loop drifts section densities every 3s and streams activity events every 12s so the board feels alive.
+**Frontend** — vanilla HTML/CSS/JS, no framework, no build step. `app.js` renders 12 operational surfaces from a view registry; `styles.css` is a locked design system (dark control-room theme, lime/teal accents). A simulated realtime loop drifts section densities every 3s and streams activity events every 12s so the board feels alive, while Firestore snapshot listeners repaint any surface the instant its data changes.
 
 **API** — a thin Node proxy (`server.js` locally, `api/*.js` serverless functions on Vercel) that:
 1. keeps the Gemini API key **server-side only** — the browser only ever talks to our own `/api/gemini`;
@@ -57,6 +57,9 @@ Every recommendation carries a **confidence score, risk level, expected improvem
 | **Emergency** | One-click **Emergency Mode** digital commander, voice copilot, dynamic evac routes, medical triage engine, stampede prediction, responder optimizer, zone-targeted broadcast, family reunification, hospital coordination, auto-generated incident report |
 | **Security** | Live crowd heatmap, threat action-orders, acoustic anomaly classification, multilingual safety broadcast, lost-person AI matching |
 | **Fan App** | Crowd-aware wayfinding, seat delivery, multilingual assistant, personal exit planner, accessible & sensory-friendly routing |
+| **Knowledge Graph** | Cross-domain reasoning — ask one question and the AI reasons *across* weather → crowd → transport → food → waste → operations, rendering the causal chain and the single move that breaks it (not module-by-module guesses) |
+| **Fan Experience Score** | Live composite satisfaction score (navigation, food wait, accessibility, transport, safety) — the AI explains what's dragging it down and the one best fix |
+| **Food Waste Predictor** | Pre-halftime forecast of unsold inventory per outlet with one-click transfer/discount actions — waste prevented before it exists |
 
 **Command palette** — the top search bar (`Ctrl/⌘ + K`) searches pages, sections (with live density), incidents, people, and one-shot actions; anything unmatched falls back to *"Ask AI"*.
 
@@ -114,27 +117,57 @@ Every recommendation carries a **confidence score, risk level, expected improvem
 
 ## Deployment
 
-Hosted on **Vercel** as static frontend + serverless API functions.
+Hosted on **Vercel** as a static frontend + serverless API functions
+(`api/gemini.js`, `api/firestore.js`, `api/health.js`).
 
 ```bash
 # one-time
-npm i -g vercel      # or use npx
+npm i -g vercel      # or use npx vercel
 vercel login
 
-# deploy
+# deploy to production
 vercel --prod
 
-# set the API key (server-side only — never commit it)
-vercel env add GEMINI_API_KEY production
-vercel --prod        # redeploy so the env var takes effect
+# server-side secrets (never commit these) — set once, then redeploy
+vercel env add GEMINI_API_KEY production        # Gemini proxy
+vercel env add FIREBASE_SERVICE_ACCOUNT production   # Firestore Admin writes
+vercel --prod        # redeploy so the env vars take effect
 ```
+
+`FIREBASE_SERVICE_ACCOUNT` is the full service-account JSON on one line (the
+same value used in `.env` locally). Without it, the deployed `/api/firestore`
+endpoint returns `503` and AI results won't persist. The **public** Firebase web
+config lives in `firebase/firebase-config.public.js` and is committed — it's a
+client identifier, not a secret (access is controlled by `firestore.rules`).
 
 Local development:
 ```bash
-node server.js       # http://localhost:4517  (reads GEMINI_API_KEY from .env)
+node server.js       # http://localhost:4517  (reads GEMINI_API_KEY + FIREBASE_SERVICE_ACCOUNT from .env)
+npm run seed         # optional: populate Firestore with demo docs
 ```
 
-The `.env` file is git-ignored; on Vercel the key is set as a project environment variable. **Rotate the key after the event.**
+The `.env` file is git-ignored. **Rotate the Gemini key and the service-account
+key after the event.** Full Firestore setup steps are in
+[SETUP-FIREBASE.md](SETUP-FIREBASE.md).
+
+## Real-time data layer (Firebase Firestore)
+
+Firestore is the production source of truth (see `firebase/` + `SETUP-FIREBASE.md`):
+
+- **9 collections** — `stadium_status`, `crowd_predictions`, `emergency_alerts`,
+  `transport`, `sustainability`, `ai_reports`, `notifications`, `fan_experience`,
+  `food_waste` (all typed in `firebase/types.ts`).
+- **Live UI, no refresh** — `onSnapshot` listeners stream every change to KPIs,
+  tables, and notifications. One shared listener per collection minimizes reads.
+- **Backend-only writes** — clients read but never write. `firestore.rules` deny
+  all client writes; the Admin SDK (`api/firestore.js`) is the single writer,
+  keyed by the service account.
+- **AI → Firestore auto-save** — Gemini results (crowd predictions, emergency
+  recommendations, sustainability insights, incident summaries, transport advice,
+  fan-experience scores, food-waste forecasts, and knowledge-graph reasoning)
+  persist automatically and stream back to every connected dashboard.
+- **Resilient** — offline cache (`persistentLocalCache`), online/offline
+  handling, and a graceful demo mode when unconfigured.
 
 ## Stack
-Vanilla HTML/CSS/JS · hand-rolled SVG charts & stadium model · Node serverless proxy · Google Gemini via a governed orchestration layer with failover & deterministic fallbacks · simulated realtime loop. No frontend dependencies.
+Vanilla HTML/CSS/JS · hand-rolled SVG charts & stadium model · Node serverless proxy · **Firebase Firestore (SDK v11 modular) real-time layer + Firebase Admin SDK backend writes** · Google Gemini via a governed orchestration layer with failover & deterministic fallbacks. No frontend build step.
