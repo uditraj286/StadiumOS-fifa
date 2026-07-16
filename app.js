@@ -1924,6 +1924,7 @@ let grounding=false;
 function toggleGrounding(btn){
   grounding=!grounding;
   btn.classList.toggle('on',grounding);
+  btn.setAttribute('aria-pressed',String(grounding));
   const h=$('#groundHint'); if(h) h.textContent=grounding?'🌐 Live Search on — answers use real-world data':'';
 }
 function clearChat(){
@@ -2691,6 +2692,22 @@ document.getElementById('nav').addEventListener('pointermove',(e)=>{
   const r=item.getBoundingClientRect();
   item.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
   item.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+});
+
+/* ───── Global error boundary ─────
+   Any uncaught error surfaces as an operator toast instead of a silent dead UI,
+   and is logged with context for debugging. The command center must not die
+   quietly during a match. */
+window.addEventListener('error',(e)=>{
+  console.error('[StadiumOS] Uncaught error:',e.message,e.filename,e.lineno);
+  if(typeof toast==='function') toast('⚠ Something went wrong','The error was logged. The dashboard keeps running.','warn');
+});
+window.addEventListener('unhandledrejection',(e)=>{
+  // AI.call/stream intentionally reject on fallback (deterministic stubs take
+  // over) — those are expected control flow, not errors worth alarming on.
+  const msg=String(e.reason?.message||e.reason||'');
+  if(/^(stub|rate|HTTP \d+|empty)$/.test(msg)) return;
+  console.error('[StadiumOS] Unhandled rejection:',e.reason);
 });
 
 /* boot */

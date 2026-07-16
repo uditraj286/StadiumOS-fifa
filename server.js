@@ -16,6 +16,14 @@ try {
 } catch (_) {}
 
 const key = env.GEMINI_API_KEY || '';
+
+/* Boot-time environment validation — fail loudly at startup, not mid-demo. */
+for (const [name, hint] of [
+  ['GEMINI_API_KEY', 'AI features will use deterministic fallbacks'],
+  ['FIREBASE_SERVICE_ACCOUNT', 'Firestore writes (/api/firestore) will return 503'],
+]) {
+  if (!env[name]) console.warn(`[env] ${name} is not set — ${hint}.`);
+}
 const mime = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',

@@ -40,6 +40,30 @@ Every recommendation carries a **confidence score, risk level, expected improvem
 
 ## 3. How the Solution Works
 
+### Architecture
+
+```mermaid
+flowchart LR
+  subgraph Browser["Browser (no build step)"]
+    UI["12 operational surfaces<br/>app.js · view registry"]
+    AI_ORCH["AI orchestrator<br/>gemini.js · failover chain"]
+    FS_CLIENT["Firestore client layer<br/>firebase/ · shared onSnapshot stores"]
+  end
+  subgraph Server["Serverless (Vercel) / server.js (local)"]
+    GEM_PROXY["/api/gemini<br/>key stays server-side"]
+    FS_API["/api/firestore<br/>Admin SDK · field whitelist"]
+  end
+  GEMINI["Google Gemini<br/>(model failover: 2.5-flash → …)"]
+  DB[("Cloud Firestore<br/>9 collections · rules deny client writes")]
+
+  UI --> AI_ORCH --> GEM_PROXY --> GEMINI
+  GEMINI --> GEM_PROXY --> AI_ORCH --> UI
+  AI_ORCH -- "auto-save AI results" --> FS_API --> DB
+  DB -- "real-time snapshots" --> FS_CLIENT --> UI
+```
+
+**AI workflow:** every Gemini result flows *through* Firestore — the model writes via the backend (validated + timestamped), and the UI updates from the snapshot stream. One source of truth; every connected client sees the same state within milliseconds, with no page refresh.
+
 **Frontend** — vanilla HTML/CSS/JS, no framework, no build step. `app.js` renders 12 operational surfaces from a view registry; `styles.css` is a locked design system (dark control-room theme, lime/teal accents). A simulated realtime loop drifts section densities every 3s and streams activity events every 12s so the board feels alive, while Firestore snapshot listeners repaint any surface the instant its data changes.
 
 **API** — a thin Node proxy (`server.js` locally, `api/*.js` serverless functions on Vercel) that:
@@ -100,18 +124,27 @@ Every recommendation carries a **confidence score, risk level, expected improvem
 - Token/latency accounting per call surfaced in the AI Control Center.
 
 ### ✅ Testing / Validation
-- **Health endpoint** `GET /api/health` reports whether the key is configured.
-- **Deterministic fallbacks are the test harness for failure:** disable a flag in `config.js` (or pull the key) and every feature is verified to degrade to a safe stub rather than break.
-- **Manual validation matrix:** each AI surface was driven end-to-end in-browser (assistant, Emergency Mode, triage, Brain cycle, search) and confirmed to render live Gemini output, with the failover chain observed handling `429`s automatically.
-- To validate quickly: open the app, hit `Ctrl+K` → `brief` → Enter (voice exec brief), then **Emergency → Activate Emergency Mode**.
+
+**Automated test suite — `npm test`** (Node's built-in `node:test` runner, zero test dependencies, 33 tests):
+
+| Layer | File | What it proves |
+|---|---|---|
+| **Unit — API validation** | `tests/api-firestore.test.js` | Method gating (405), unknown collection/op → 400, missing ids → 400, malformed JSON handled, per-IP rate limiting (429) |
+| **Unit — security whitelist** | `tests/api-firestore.test.js` | `sanitize()` strips non-whitelisted fields (incl. injection attempts), timestamps can never be client-spoofed |
+| **Unit — Gemini proxy** | `tests/api-gemini.test.js` | Missing key → 503, **path-injection in the model param rejected** (`../`, `?`, `&` …), valid model names pass |
+| **Contract** | `tests/contracts.test.js` | Client collection registry ↔ backend schema never drift; seed docs conform to the whitelist; `firestore.rules` grants public read to exactly the public collections and **never** client writes |
+| **Integration — real HTTP** | `tests/integration-server.test.js` | Boots `server.js` on a random port: health check, static serving with correct MIME, **path-traversal blocked**, API validation over the wire |
+
+- **Deterministic fallbacks are the failure-mode harness:** disable a flag in `config.js` (or pull the key) and every feature verifiably degrades to a safe stub rather than breaking.
+- **Manual validation matrix:** each AI surface driven end-to-end in-browser, failover chain observed handling live `429`s.
 
 ### ♿ Accessibility
+- **WCAG mechanics:** skip-to-content link, `:focus-visible` indicators on all interactive elements, `prefers-reduced-motion` support (all animation disabled for users who ask), ARIA labels on every icon-only control, `role="dialog"`/`aria-modal` on the assistant, `aria-live` regions for the chat log and toast notifications, `role="search"` + labelled inputs, `aria-pressed` state on toggles.
 - **Inclusive by design, not as an afterthought:** the Fan App includes a **wheelchair / step-free routing mode** (elevators & ramps only, avoids dead elevators) and a **sensory-friendly mode** (routes around loud/bright/crowded zones).
 - **Multilingual throughout** — assistant, announcements, and safety broadcasts render in EN/ES/FR/AR/PT; the fan assistant mirrors the user's language.
 - **Voice input & output** — Web Speech API for hands-free commands and a spoken executive brief (screen-free operation).
-- **Keyboard-first navigation** — `Ctrl/⌘+K` search, full arrow-key/Enter/Esc control of the command palette.
-- **Fully responsive** — one codebase adapts from mobile → tablet → laptop → desktop (drawer nav on small screens, no horizontal overflow, scalable SVG).
-- Semantic buttons, high-contrast dark theme, legible type scale.
+- **Keyboard-first navigation** — `Ctrl/⌘+K` search, arrow-key/Enter/Esc control of the command palette, and keyboard-focusable nav with visible focus rings.
+- **Fully responsive** — one codebase adapts from mobile → desktop (drawer nav, no horizontal overflow, scalable SVG); high-contrast dark theme.
 
 ---
 

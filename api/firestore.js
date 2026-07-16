@@ -103,14 +103,18 @@ module.exports = async (req, res) => {
   if (rateLimited(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown'))
     return res.status(429).json({ error: 'Rate limited. Try again in a minute.' });
 
-  initAdmin();
-  if (!db) return res.status(503).json({ error: initError || 'Firestore backend not configured.' });
-
+  // Validate the request shape BEFORE touching credentials — bad input should
+  // fail fast (400) whether or not the backend is configured, and this keeps
+  // the validation path unit-testable without a live Firebase project.
   const body = typeof req.body === 'string' ? safeParse(req.body) : (req.body || {});
   const { op, collection, id, data } = body;
 
   if (!SCHEMAS[collection]) return res.status(400).json({ error: `Unknown collection: ${collection}` });
   if (!['add', 'update', 'delete'].includes(op)) return res.status(400).json({ error: `Unknown op: ${op}` });
+  if ((op === 'update' || op === 'delete') && !id) return res.status(400).json({ error: `${op} requires an id.` });
+
+  initAdmin();
+  if (!db) return res.status(503).json({ error: initError || 'Firestore backend not configured.' });
 
   try {
     const col = db.collection(collection);
@@ -142,3 +146,10 @@ module.exports = async (req, res) => {
 };
 
 function safeParse(s) { try { return JSON.parse(s); } catch (_) { return {}; } }
+
+/* Test-only exports: pure helpers + schema tables, so the validation and
+   sanitization logic is unit-testable without a live Firebase project. */
+module.exports.SCHEMAS = SCHEMAS;
+module.exports.TIME_FIELD = TIME_FIELD;
+module.exports.sanitize = sanitize;
+module.exports.safeParse = safeParse;
