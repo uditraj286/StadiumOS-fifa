@@ -67,7 +67,7 @@
       </div>
     </header>
 
-    <div class="views" id="views"></div>
+    <div class="views" id="views" role="main" tabindex="-1"></div>
   </main>
 </div>
 
@@ -98,6 +98,7 @@
 
 <div class="nav-backdrop" onclick="document.body.classList.remove('nav-open')"></div>
 <div class="toast-stack" id="toastStack" role="status" aria-live="polite" aria-label="Notifications"></div>
+<div id="sr-announcer" class="visually-hidden" aria-live="polite" role="status"></div>
 
 <!-- ══════════ AUTH GATE ══════════ -->
 <div class="auth-gate" id="authGate" hidden style="display:none !important" aria-hidden="true">

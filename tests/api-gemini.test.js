@@ -33,6 +33,17 @@ describe('/api/gemini validation', () => {
     }
   });
 
+  test('rate limiter kicks in after 30 requests/min from one IP', async () => {
+    process.env.GEMINI_API_KEY = 'test-key-never-sent';
+    let last;
+    for (let i = 0; i < 32; i++) {
+      last = makeRes();
+      // invalid model → the request is cheap (never reaches upstream) but still counts
+      await handler(makeReq({ ip: '8.8.4.4', query: { model: 'INVALID!' } }), last);
+    }
+    assert.equal(last.statusCode, 429);
+  });
+
   test('accepts well-formed model names (passes validation gate)', () => {
     // Mirror of the handler's whitelist — a valid name must never 400.
     const ok = /^[a-z0-9.\-]+$/;

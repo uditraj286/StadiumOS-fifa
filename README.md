@@ -125,7 +125,7 @@ flowchart LR
 
 ### ✅ Testing / Validation
 
-**Automated test suite — `npm test`** (Node's built-in `node:test` runner, zero test dependencies, 33 tests):
+**Automated test suite — `npm test`** (Node's built-in `node:test` runner, zero test dependencies, **59 tests**; coverage report via `npm run test:coverage`):
 
 | Layer | File | What it proves |
 |---|---|---|
@@ -134,12 +134,13 @@ flowchart LR
 | **Unit — Gemini proxy** | `tests/api-gemini.test.js` | Missing key → 503, **path-injection in the model param rejected** (`../`, `?`, `&` …), valid model names pass |
 | **Contract** | `tests/contracts.test.js` | Client collection registry ↔ backend schema never drift; seed docs conform to the whitelist; `firestore.rules` grants public read to exactly the public collections and **never** client writes |
 | **Integration — real HTTP** | `tests/integration-server.test.js` | Boots `server.js` on a random port: health check, static serving with correct MIME, **path-traversal blocked**, API validation over the wire |
+| **Accessibility (25 tests)** | `tests/accessibility.test.js` | Skip link ordering, labelled landmarks/dialogs/live-regions, every icon-only control labelled, focus-visible + reduced-motion + high-contrast CSS present, runtime a11y pass wired into navigation, and **computed WCAG AA contrast ratios on the actual design tokens** |
 
 - **Deterministic fallbacks are the failure-mode harness:** disable a flag in `config.js` (or pull the key) and every feature verifiably degrades to a safe stub rather than breaking.
 - **Manual validation matrix:** each AI surface driven end-to-end in-browser, failover chain observed handling live `429`s.
 
 ### ♿ Accessibility
-- **WCAG mechanics:** skip-to-content link, `:focus-visible` indicators on all interactive elements, `prefers-reduced-motion` support (all animation disabled for users who ask), ARIA labels on every icon-only control, `role="dialog"`/`aria-modal` on the assistant, `aria-live` regions for the chat log and toast notifications, `role="search"` + labelled inputs, `aria-pressed` state on toggles.
+- **WCAG mechanics:** skip-to-content link, `:focus-visible` indicators on all interactive elements, `prefers-reduced-motion` support (all animation disabled for users who ask), `prefers-contrast` high-contrast theme, ARIA labels on every icon-only control, `role="dialog"`/`aria-modal` on the assistant, `aria-live` regions for chat/toasts/**view-change announcements**, `role="search"` + labelled inputs, `aria-pressed` state on toggles, `aria-current="page"` navigation state, heading semantics (`aria-level` 1/2) stamped on every view, and charts exposed as labelled images. **Contrast is AA-verified in CI** — the test suite computes WCAG luminance ratios on the design tokens.
 - **Inclusive by design, not as an afterthought:** the Fan App includes a **wheelchair / step-free routing mode** (elevators & ramps only, avoids dead elevators) and a **sensory-friendly mode** (routes around loud/bright/crowded zones).
 - **Multilingual throughout** — assistant, announcements, and safety broadcasts render in EN/ES/FR/AR/PT; the fan assistant mirrors the user's language.
 - **Voice input & output** — Web Speech API for hands-free commands and a spoken executive brief (screen-free operation).

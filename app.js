@@ -1858,11 +1858,31 @@ function pickSearch(i){
 
 /* ───── Router ───── */
 function go(name){
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
+  document.querySelectorAll('.nav-item').forEach(b=>{
+    const active=b.dataset.view===name;
+    b.classList.toggle('active',active);
+    if(active) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+  });
   views.innerHTML = `<div class="view active">${VIEWS[name]()}</div>`;
+  applyA11y(name);
   countUp();
   document.body.classList.remove('nav-open');   // mobile: close the drawer after navigating
   if(name==='emergency') paintHazard();
+}
+
+/* Post-render accessibility pass: templates are HTML strings, so semantic
+   roles are stamped here once per navigation — headings for screen-reader
+   outline, labelled charts, and a polite announcement of the view change. */
+function applyA11y(name){
+  const title=views.querySelector('.view-title');
+  if(title){ title.setAttribute('role','heading'); title.setAttribute('aria-level','1'); }
+  views.querySelectorAll('.section-title').forEach(el=>{ el.setAttribute('role','heading'); el.setAttribute('aria-level','2'); });
+  views.querySelectorAll('.chart-wrap svg').forEach(svg=>{
+    svg.setAttribute('role','img');
+    if(!svg.getAttribute('aria-label')) svg.setAttribute('aria-label','Operational data chart');
+  });
+  const announcer=document.getElementById('sr-announcer');
+  if(announcer&&title) announcer.textContent=`${title.textContent.trim()} view loaded`;
 }
 $('#nav').addEventListener('click',e=>{
   const b=e.target.closest('.nav-item'); if(b) go(b.dataset.view);

@@ -484,3 +484,10 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px soli
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
   .ai-orb,.dot.pulse,.badge-dot-red{animation:none!important}
 }
+/* Screen-reader-only content (the live announcer). */
+.visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* High-contrast preference: strengthen hairlines and secondary text. */
+@media (prefers-contrast: more){
+  :root{--border-hairline:rgba(255,255,255,.35);--text-secondary:#c9cfc6}
+  .nav-item,.card,.pill{border-color:rgba(255,255,255,.4)}
+}
