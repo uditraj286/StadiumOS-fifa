@@ -16,10 +16,10 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 window.FIREBASE_CONFIG = {
-  apiKey: 'AIzaSyC8BKGPbp26NGUyPd8RS-SOi6hZ31u7ssA',
-  authDomain: 'stadiumos-ai.firebaseapp.com',
-  projectId: 'stadiumos-ai',
-  storageBucket: 'stadiumos-ai.firebasestorage.app',
-  messagingSenderId: '850743572942',
-  appId: '1:850743572942:web:e14bf105610b97c320539f',
+  apiKey: '',
+  authDomain: '',
+  projectId: '',
+  storageBucket: '',
+  messagingSenderId: '',
+  appId: '',
 };
