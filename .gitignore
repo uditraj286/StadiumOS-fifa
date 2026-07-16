@@ -11,3 +11,6 @@ Thumbs.db
 .DS_Store
 
 .vercel
+
+# firebase web config (public identifier, but kept out of the repo by owner preference)
+firebase/firebase-config.public.js
