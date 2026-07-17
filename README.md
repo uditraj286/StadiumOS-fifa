@@ -19,6 +19,18 @@ It doesn't just show dashboards — it *observes, predicts, explains, and recomm
 
 ---
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Dashboard — one pane of glass](screenshots/dashboard.png) **Dashboard** — live KPIs, matches, alert queue, AI insights | ![Multi-Agent AI Council](screenshots/agent-council.png) **Agent Council** — 8 agents deliberate; conflicts resolved; one accountable decision (situation → prediction → reasoning → 92% confidence → actions → impact → rejected alternatives) |
+| ![Knowledge Graph](screenshots/knowledge-graph.png) **Knowledge Graph** — cross-domain causal reasoning: rain → crowd → concessions → waste | ![Digital Twin](screenshots/digital-twin.png) **Digital Twin** — live stadium model, clickable sections, density heatmap |
+| ![Emergency Command](screenshots/emergency.png) **Emergency Intelligence** — one-click Emergency Mode, evac routing, triage, hazard map | ![Sustainability](screenshots/sustainability.png) **Sustainability** — live ESG telemetry, AI optimization queue, food-waste predictor |
+
+*(Screenshots are reproducible: `node scripts/capture-screens.js` against a running dev server.)*
+
+---
+
 ## 1. Chosen Vertical
 
 **Live operations & safety for mega-events** — the real-time "war room" that runs a stadium on match day.
