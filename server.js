@@ -33,7 +33,7 @@ const mime = {
   '.png': 'image/png',
 };
 const hits = new Map();
-const modelOk = /^[a-z0-9.\-]+$/;
+const modelOk = /^[a-z0-9.-]+$/;
 
 function sendJson(res, status, body) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });

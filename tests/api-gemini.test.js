@@ -1,6 +1,6 @@
 /* Unit tests: /api/gemini proxy — method gating, key presence, and the model
    whitelist that prevents URL path injection into the upstream request. */
-const { test, describe, before } = require('node:test');
+const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 const { makeReq, makeRes } = require('./helpers');
 
@@ -46,7 +46,7 @@ describe('/api/gemini validation', () => {
 
   test('accepts well-formed model names (passes validation gate)', () => {
     // Mirror of the handler's whitelist — a valid name must never 400.
-    const ok = /^[a-z0-9.\-]+$/;
+    const ok = /^[a-z0-9.-]+$/;
     for (const model of ['gemini-flash-latest', 'gemini-2.0-flash', 'gemini-2.5-flash-lite']) {
       assert.equal(ok.test(model), true, model);
     }

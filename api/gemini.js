@@ -1,6 +1,6 @@
 const https = require('https');
 
-const MODEL_OK = /^[a-z0-9.\-]+$/;
+const MODEL_OK = /^[a-z0-9.-]+$/;
 const requests = new Map();
 
 function rateLimited(ip) {

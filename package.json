@@ -8,9 +8,16 @@
     "dev": "node server.js",
     "seed": "node scripts/seed-firestore.js",
     "test": "node --test tests/*.test.js",
-    "test:coverage": "node --test --experimental-test-coverage tests/*.test.js"
+    "test:coverage": "node --test --experimental-test-coverage tests/*.test.js",
+    "lint": "eslint .",
+    "format": "prettier --check ."
   },
   "dependencies": {
     "firebase-admin": "^13.0.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.7.0",
+    "prettier": "^3.9.5"
   }
 }

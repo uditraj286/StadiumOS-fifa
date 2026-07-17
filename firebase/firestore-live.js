@@ -50,7 +50,7 @@ function paintStadiumKpis(status) {
 }
 
 /** Live notifications: bump the bell badge + toast unread ones as they arrive. */
-let notifSeen = new Set();
+const notifSeen = new Set();
 let notifPrimed = false;
 function paintNotifications(list) {
   const unread = list.filter((n) => !n.read);

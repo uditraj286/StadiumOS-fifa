@@ -3,8 +3,19 @@
 **A live command-and-control platform for FIFA World Cup 2026 stadium operations.**
 It doesn't just show dashboards — it *observes, predicts, explains, and recommends*, keeping a human in the loop for every consequential decision.
 
-> **Live demo:** deployed on Vercel (see *Deployment* below).
+> **Live demo:** https://stadiumos-ai-five.vercel.app
 > **Run locally:** `node server.js` → http://localhost:4517 (zero frontend build step).
+> **Architecture deep-dive:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
+**Quality gates** — all enforced, all green:
+
+| Gate | Status |
+|---|---|
+| Automated tests (`npm test`) | ✅ 59/59 — unit · contract · integration (real HTTP) · 25 accessibility checks |
+| Lint (`npm run lint`) | ✅ 0 errors, 0 warnings (ESLint flat config; Prettier + EditorConfig) |
+| Accessibility | ✅ WCAG 2.2 AA mechanics, **contrast ratios computed in CI** against the design tokens |
+| Security | ✅ Zero client write capability; server-side key custody; per-collection field whitelists; rate limiting; deny-by-default rules |
+| Runtime resilience | ✅ Deterministic fallback on every AI feature; global error boundary; offline cache |
 
 ---
 
@@ -202,6 +213,27 @@ Firestore is the production source of truth (see `firebase/` + `SETUP-FIREBASE.m
   persist automatically and stream back to every connected dashboard.
 - **Resilient** — offline cache (`persistentLocalCache`), online/offline
   handling, and a graceful demo mode when unconfigured.
+
+## Folder structure
+
+```
+index.html · styles.css · app.js · gemini.js · config.js   # frontend (no build step)
+server.js                                                   # local dev server
+api/            gemini.js · firestore.js · health.js       # serverless functions
+firebase/       config · service · hooks · live · types.ts # realtime data layer
+tests/          59 tests (unit · contract · integration · a11y)
+scripts/        seed-firestore.js
+docs/           ARCHITECTURE.md (diagrams, AI pipeline, schema)
+firestore.rules · firestore.indexes.json · firebase.json
+```
+
+## Future roadmap
+
+- **Computer-vision ingestion** — replace simulated section densities with real CCTV crowd-counting feeds (the data model already accepts them).
+- **Multi-venue federation** — the cross-stadium learning loop generalized to all 16 World Cup venues with a shared Firestore project per region.
+- **Operator authentication & audit** — role-based access (operator / commander / read-only) with signed action logs for every human approval.
+- **Native fan app** — the Fan App surface shipped as a PWA with push notifications for exit plans and zone alerts.
+- **Model upgrades** — swap-in of Gemini structured-output mode (`responseSchema`) to eliminate JSON-parse fallbacks entirely.
 
 ## Stack
 Vanilla HTML/CSS/JS · hand-rolled SVG charts & stadium model · Node serverless proxy · **Firebase Firestore (SDK v11 modular) real-time layer + Firebase Admin SDK backend writes** · Google Gemini via a governed orchestration layer with failover & deterministic fallbacks. No frontend build step.
