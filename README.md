@@ -11,7 +11,7 @@ It doesn't just show dashboards — it *observes, predicts, explains, and recomm
 
 > **Live demo:** https://stadiumos-ai-five.vercel.app
 > **Run locally:** `node server.js` → http://localhost:4517 (zero frontend build step).
-> **Architecture deep-dive:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · **Code review:** [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) · **Security policy:** [SECURITY.md](SECURITY.md) · **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
+> **Architecture deep-dive:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · **API reference:** [docs/API.md](docs/API.md) · **Code review:** [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) · **Security policy:** [SECURITY.md](SECURITY.md) · **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
 > **CI:** every push runs lint + the full 59-test suite ([.github/workflows/ci.yml](.github/workflows/ci.yml)); every commit runs pre-commit hooks (husky + lint-staged).
 
 **Quality gates** — all enforced, all green:
@@ -45,6 +45,21 @@ It doesn't just show dashboards — it *observes, predicts, explains, and recomm
 A FIFA World Cup venue like MetLife Stadium moves ~82,000 people, 40%+ of them international, through gates, concourses, transit, and emergencies, all within a few hours. Today those decisions are made by humans staring at a wall of disconnected screens (CCTV, ticketing, transit, weather, radio). The single metric that decides whether a match day is safe or a disaster is **time-to-decision for a human under pressure** — a guard, a medic, a transport lead, an executive.
 
 StadiumOS AI collapses that wall of screens into **one data model and one governed AI core**, and turns raw telemetry into *decisions with reasons attached*. The same platform generalizes to any mega-event: Olympics, concerts, marathons, airports.
+
+### Challenge alignment — every feature maps to an operational problem
+
+| Problem area | What StadiumOS AI does about it | Where |
+|---|---|---|
+| **Crowd management** | Live density heatmap (24 sections), predictive horizon (NOW/+5/+15/+30 min), stampede prediction, steward reallocation with AI reasoning | Security · Mission Control · Stadium Brain |
+| **Emergency response** | One-click Emergency Mode: evac routes, triage engine, responder optimizer, multilingual zone broadcast, family reunification, auto-generated after-action report | Emergency Intelligence |
+| **Real-time decision support** | Multi-Agent Council (8 agents deliberate → one accountable decision with confidence/risk/alternatives), cross-domain Knowledge Graph, what-if disaster simulator | Agent Council · Knowledge Graph · Mission Control |
+| **Transportation** | Egress surge forecast, parking rerouting, per-seat/per-mode personal exit plans, grounded live transit checks (Google Search) | Transport |
+| **Fan experience** | Live composite experience score with AI-explained drags, multilingual AI companion, crowd-aware wayfinding, food recommendations | Fan App · Dashboard |
+| **Accessibility** | Wheelchair/step-free routing, sensory-friendly mode, voice in/out, WCAG 2.2 AA enforced by 25 CI tests | Fan App · platform-wide |
+| **Sustainability** | Live ESG telemetry, AI optimization queue, pre-halftime food-waste predictor with one-click transfers | Sustainability |
+| **Security** | Threat action-orders, CCTV anomaly framing, unattended-object workflow, acoustic classification | Security |
+| **Venue operations** | Digital twin with clickable sections, volunteer optimization, energy/water baselines, incident timeline & replay | Digital Twin · Volunteers |
+| **Operational intelligence** | Every AI output persists to Firestore and streams to all clients; per-call latency/token/fallback telemetry in AI Control Center | Platform-wide |
 
 ---
 
@@ -236,14 +251,55 @@ Firestore is the production source of truth (see `firebase/` + `SETUP-FIREBASE.m
 ## Folder structure
 
 ```
-index.html · styles.css · app.js · gemini.js · config.js   # frontend (no build step)
-server.js                                                   # local dev server
-api/            gemini.js · firestore.js · health.js       # serverless functions
-firebase/       config · service · hooks · live · types.ts # realtime data layer
-tests/          59 tests (unit · contract · integration · a11y)
-scripts/        seed-firestore.js
-docs/           ARCHITECTURE.md (diagrams, AI pipeline, schema)
-firestore.rules · firestore.indexes.json · firebase.json
+stadiumos-ai/
+├── index.html                    # single page — semantic HTML, ARIA landmarks, skip link
+├── styles.css                    # design system: tokens, glassmorphism, a11y affordances
+├── app.js                        # application core: 12-view registry + feature engines (TOC inside)
+├── gemini.js                     # AI orchestrator: failover chain, telemetry, deterministic fallbacks
+├── config.js                     # per-feature activation flags (one-flag kill switch per AI feature)
+├── server.js                     # local dev server — mirrors Vercel routing, env validation at boot
+│
+├── api/                          # serverless functions (Vercel) — the only privileged code
+│   ├── gemini.js                 #   Gemini key proxy · model whitelist · 30 req/min/IP
+│   ├── firestore.js              #   Admin-SDK single writer · field whitelists · server timestamps
+│   └── health.js                 #   liveness + key-presence check
+│
+├── firebase/                     # realtime data layer (browser ES modules)
+│   ├── firebase-config.js        #   SDK v11 init · offline persistence · graceful demo mode
+│   ├── firestore-service.js      #   service layer: get/subscribe/add/update/delete
+│   ├── use-firestore.js          #   shared-listener stores — N widgets, 1 listener
+│   ├── firestore-live.js         #   boots listeners · live KPIs · AI→Firestore auto-save routes
+│   ├── collections.js            #   collection registry + public/sensitive classification + seeds
+│   └── types.ts                  #   TypeScript contracts for all 9 collections + service API
+│
+├── tests/                        # 59 tests — npm test (node:test, zero test dependencies)
+│   ├── api-firestore.test.js     #   validation · sanitization whitelist · rate limiting
+│   ├── api-gemini.test.js        #   key gating · model path-injection · rate limiting
+│   ├── contracts.test.js         #   registry ↔ schemas ↔ rules drift guards
+│   ├── integration-server.test.js#   real HTTP: health, MIME, path traversal, wire validation
+│   ├── accessibility.test.js     #   25 WCAG checks incl. computed AA contrast ratios
+│   └── helpers.js                #   req/res shims for handler tests
+│
+├── scripts/
+│   ├── seed-firestore.js         # one-command demo data (npm run seed)
+│   └── capture-screens.js        # reproducible README screenshots via headless Chrome
+│
+├── docs/
+│   ├── ARCHITECTURE.md           # system diagram · AI pipeline · schema · conventions
+│   └── CODE_REVIEW.md            # per-file review scores + documented trade-offs
+│
+├── screenshots/                  # 6 live captures used in this README
+├── .github/workflows/ci.yml     # CI: lint + 59 tests + coverage on every push
+├── .husky/                       # pre-commit: lint-staged + full test suite
+├── firestore.rules               # deny-by-default security rules (client writes: never)
+├── firestore.indexes.json        # composite indexes
+├── firebase.json                 # Firebase CLI config
+├── eslint.config.js              # flat config, per-runtime (browser / ESM / Node)
+├── .prettierrc · .editorconfig   # formatting standards
+├── SECURITY.md                   # threat model — every guarantee mapped to its test
+├── CONTRIBUTING.md               # quality gates + architecture ground rules
+├── LICENSE                       # MIT
+└── SETUP-FIREBASE.md             # zero-to-live Firebase guide
 ```
 
 ## Future roadmap

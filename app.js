@@ -1881,6 +1881,12 @@ function pickSearch(i){
 })();
 
 /* ───── Router ───── */
+/**
+ * Navigate to a view: swaps the rendered surface, syncs nav state
+ * (visual + aria-current), and runs the post-render accessibility pass.
+ * The entire "router" — views are pure template functions in VIEWS.
+ * @param {keyof typeof VIEWS} name - registered view id (e.g. 'dashboard')
+ */
 function go(name){
   document.querySelectorAll('.nav-item').forEach(b=>{
     const active=b.dataset.view===name;
@@ -1957,6 +1963,11 @@ function approveRec(btn){
 }
 
 /* ───── Toasts & activity ───── */
+/**
+ * Operator toast notification (also announced to screen readers via the
+ * toast stack's aria-live region). Auto-dismisses after 4.2s.
+ * @param {string} title @param {string} sub @param {'warn'|''} [cls]
+ */
 function toast(title,sub,cls=''){
   const el=document.createElement('div');
   el.className=`toast ${cls}`;
@@ -2142,6 +2153,14 @@ function startVoice(){
 /* ───── GenAI tools (live Gemini) ───── */
 /* Models wrap JSON in prose or fences more often than not — pull out the
    first JSON array/object instead of trusting the raw string. */
+/**
+ * Extract the first JSON value from a model response that may be wrapped in
+ * prose or markdown fences. Throwing (rather than returning null) is the
+ * contract: callers catch and fall back to their deterministic stub.
+ * @param {string} raw - full model output
+ * @returns {any} parsed JSON payload
+ * @throws {Error} when no parseable JSON is present (triggers feature fallback)
+ */
 function extractJSON(raw){
   const m=raw.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
   if(!m) throw new Error('no JSON in response');
