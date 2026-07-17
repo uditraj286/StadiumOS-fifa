@@ -1,11 +1,18 @@
 # ⚽ StadiumOS AI — AI Decision Intelligence for Mega-Events
 
+![CI](https://github.com/uditraj286/StadiumOS-fifa/actions/workflows/ci.yml/badge.svg)
+![Tests](https://img.shields.io/badge/tests-59%20passing-brightgreen)
+![Lint](https://img.shields.io/badge/eslint-0%20errors-brightgreen)
+![Accessibility](https://img.shields.io/badge/WCAG%202.2-AA%20(CI--enforced)-blue)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
 **A live command-and-control platform for FIFA World Cup 2026 stadium operations.**
 It doesn't just show dashboards — it *observes, predicts, explains, and recommends*, keeping a human in the loop for every consequential decision.
 
 > **Live demo:** https://stadiumos-ai-five.vercel.app
 > **Run locally:** `node server.js` → http://localhost:4517 (zero frontend build step).
-> **Architecture deep-dive:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+> **Architecture deep-dive:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · **Code review:** [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) · **Security policy:** [SECURITY.md](SECURITY.md) · **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
+> **CI:** every push runs lint + the full 59-test suite ([.github/workflows/ci.yml](.github/workflows/ci.yml)); every commit runs pre-commit hooks (husky + lint-staged).
 
 **Quality gates** — all enforced, all green:
 

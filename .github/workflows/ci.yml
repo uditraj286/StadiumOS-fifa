@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    name: Lint + Test (59 tests incl. 25 a11y checks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (ESLint — zero errors, zero warnings)
+        run: npm run lint
+
+      - name: Test (unit · contract · integration · accessibility)
+        run: npm test
+
+      - name: Coverage report
+        run: npm run test:coverage

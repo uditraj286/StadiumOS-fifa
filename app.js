@@ -1,4 +1,26 @@
-/* ═══════════ StadiumOS AI — app core ═══════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   StadiumOS AI — application core (deliberate single-file architecture)
+
+   This classic script is the whole frontend: a view registry + feature logic
+   sharing one scope with config.js and gemini.js. No build step by design —
+   see docs/CODE_REVIEW.md ("The app.js trade-off") for the rationale.
+
+   TABLE OF CONTENTS
+   ─ Simulated live state (S) + shared helpers ......... top of file
+   ─ VIEWS registry (12 surfaces) ...................... const VIEWS = {…}
+       dashboard · brain · graph · council · mission · security · emergency
+       twin · volunteers · transport · sustainability · aicenter · fan
+   ─ Feature engines ................................... below the registry
+       volunteers · fan app · stadium brain · situation room · emergency
+       command · trust/emotion/what-if · digital twin · UI partials (kpi,
+       qrow, act…) · navigation (go + applyA11y) · toasts + activity feed
+       assistant (chat/voice) · search palette · security threats
+       transport planners · sustainability + food waste · fan experience
+       knowledge graph · multi-agent council · error boundary · boot
+   Conventions: every AI feature calls AI.call/AI.stream (gemini.js), renders
+   optimistically, persists via window.Firestore.save, and has a deterministic
+   fallback — a Gemini outage degrades features, never crashes a surface.
+   ═══════════════════════════════════════════════════════════════════════════ */
 const $ = s => document.querySelector(s);
 const views = $('#views');
 
