@@ -100,42 +100,6 @@
 <div class="toast-stack" id="toastStack" role="status" aria-live="polite" aria-label="Notifications"></div>
 <div id="sr-announcer" class="visually-hidden" aria-live="polite" role="status"></div>
 
-<!-- ══════════ AUTH GATE ══════════ -->
-<div class="auth-gate" id="authGate" hidden style="display:none !important" aria-hidden="true">
-  <div class="auth-bg"></div>
-  <div class="auth-card">
-    <div class="auth-brand"><div class="brand-logo">⚽</div><span class="brand-name">STADIUM<b>OS</b></span></div>
-    <div class="auth-title" id="authTitle">Command Center Access</div>
-    <div class="auth-sub" id="authSub">Sign in to the FIFA World Cup 2026 operations platform.</div>
-
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tabLogin" onclick="authTab('login')">Sign In</button>
-      <button class="auth-tab" id="tabSignup" onclick="authTab('signup')">Create Account</button>
-    </div>
-
-    <form id="authForm" onsubmit="authSubmit(event)">
-      <div class="auth-field" id="fldName" hidden>
-        <label>Full name</label>
-        <input id="auName" placeholder="Priya Ramesh" autocomplete="name">
-      </div>
-      <div class="auth-field">
-        <label>Email</label>
-        <input id="auEmail" type="email" placeholder="you@fifa.org" autocomplete="email" required>
-      </div>
-      <div class="auth-field">
-        <label>Password</label>
-        <input id="auPass" type="password" placeholder="••••••••" autocomplete="current-password" required>
-      </div>
-      <div class="auth-field" id="fldCode" hidden>
-        <label>Super Admin Code <span class="auth-opt">— optional, unlocks full access</span></label>
-        <input id="auCode" placeholder="leave blank for operator role" autocomplete="off">
-      </div>
-      <div class="auth-err" id="authErr" hidden></div>
-      <button class="btn btn-lime auth-submit" type="submit" id="authGo">Sign In</button>
-    </form>
-    <div class="auth-note" id="authNote">Every account gets full <b>Super Admin</b> access.</div>
-  </div>
-</div>
 
 <!-- ══════════ ADMIN PANEL (super admin) ══════════ -->
 <div class="assistant-overlay" id="adminOverlay" onclick="if(event.target.id==='adminOverlay')this.classList.remove('open')">

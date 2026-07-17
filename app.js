@@ -1780,6 +1780,8 @@ function searchIndex(){
   const P=(label,sub,view,ic)=>idx.push({type:'Pages',label,sub,ic,run:()=>go(view)});
   P('Dashboard','overview · KPIs · alerts','dashboard','▦');
   P('Stadium Brain','predictions · reasoning · executive brief','brain','🧠');
+  P('Knowledge Graph','cross-domain causal reasoning','graph','🕸');
+  P('Agent Council','8 AI agents · deliberation · decision','council','⬡');
   P('Mission Control','what-if simulator · trust scores · replay','mission','◎');
   P('Security','heatmap · threats · cameras · broadcast','security','🛡');
   P('Emergency','copilot · evacuation · triage · hazards','emergency','🚨');
